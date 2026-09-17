@@ -1,0 +1,90 @@
+== fetching index https://deb.debian.org/debian bookworm
+== index size: 63436
+== got libgl1 88448 bytes
+== got libglx0 34384 bytes
+== got libopengl0 30644 bytes
+== got libglvnd0 51820 bytes
+== got libegl1 33652 bytes
+== got libice6 58540 bytes
+== got libsm6 35108 bytes
+== got libxfixes3 22684 bytes
+== got libxi6 84208 bytes
+== got libxrender1 33228 bytes
+== got libxt6 186140 bytes
+== got libxkbcommon0 106108 bytes
+== got libxxf86vm1 20820 bytes
+== OK: ['libgl1', 'libglx0', 'libopengl0', 'libglvnd0', 'libegl1', 'libice6', 'libsm6', 'libxfixes3', 'libxi6', 'libxrender1', 'libxt6', 'libxkbcommon0', 'libxxf86vm1']
+== BAD: []
+== RESULT: COMPLETE
++ for d in debs/*.deb
++ '[' -e debs/libegl1_1.6.0-1_amd64.deb ']'
++ dpkg-deb -x debs/libegl1_1.6.0-1_amd64.deb sysroot/
++ echo '== extracted debs/libegl1_1.6.0-1_amd64.deb'
+== extracted debs/libegl1_1.6.0-1_amd64.deb
++ for d in debs/*.deb
++ '[' -e debs/libgl1_1.6.0-1_amd64.deb ']'
++ dpkg-deb -x debs/libgl1_1.6.0-1_amd64.deb sysroot/
++ echo '== extracted debs/libgl1_1.6.0-1_amd64.deb'
+== extracted debs/libgl1_1.6.0-1_amd64.deb
++ for d in debs/*.deb
++ '[' -e debs/libglvnd0_1.6.0-1_amd64.deb ']'
++ dpkg-deb -x debs/libglvnd0_1.6.0-1_amd64.deb sysroot/
++ echo '== extracted debs/libglvnd0_1.6.0-1_amd64.deb'
+== extracted debs/libglvnd0_1.6.0-1_amd64.deb
++ for d in debs/*.deb
++ '[' -e debs/libglx0_1.6.0-1_amd64.deb ']'
++ dpkg-deb -x debs/libglx0_1.6.0-1_amd64.deb sysroot/
++ echo '== extracted debs/libglx0_1.6.0-1_amd64.deb'
+== extracted debs/libglx0_1.6.0-1_amd64.deb
++ for d in debs/*.deb
++ '[' -e debs/libice6_1.0.10-1_amd64.deb ']'
++ dpkg-deb -x debs/libice6_1.0.10-1_amd64.deb sysroot/
++ echo '== extracted debs/libice6_1.0.10-1_amd64.deb'
+== extracted debs/libice6_1.0.10-1_amd64.deb
++ for d in debs/*.deb
++ '[' -e debs/libopengl0_1.6.0-1_amd64.deb ']'
++ dpkg-deb -x debs/libopengl0_1.6.0-1_amd64.deb sysroot/
++ echo '== extracted debs/libopengl0_1.6.0-1_amd64.deb'
+== extracted debs/libopengl0_1.6.0-1_amd64.deb
++ for d in debs/*.deb
++ '[' -e debs/libsm6_1.2.3-1_amd64.deb ']'
++ dpkg-deb -x debs/libsm6_1.2.3-1_amd64.deb sysroot/
++ echo '== extracted debs/libsm6_1.2.3-1_amd64.deb'
+== extracted debs/libsm6_1.2.3-1_amd64.deb
++ for d in debs/*.deb
++ '[' -e debs/libxfixes3_6.0.0-2_amd64.deb ']'
++ dpkg-deb -x debs/libxfixes3_6.0.0-2_amd64.deb sysroot/
++ echo '== extracted debs/libxfixes3_6.0.0-2_amd64.deb'
+== extracted debs/libxfixes3_6.0.0-2_amd64.deb
++ for d in debs/*.deb
++ '[' -e debs/libxi6_1.8-1+b1_amd64.deb ']'
++ dpkg-deb -x debs/libxi6_1.8-1+b1_amd64.deb sysroot/
++ echo '== extracted debs/libxi6_1.8-1+b1_amd64.deb'
+== extracted debs/libxi6_1.8-1+b1_amd64.deb
++ for d in debs/*.deb
++ '[' -e debs/libxkbcommon0_1.5.0-1_amd64.deb ']'
++ dpkg-deb -x debs/libxkbcommon0_1.5.0-1_amd64.deb sysroot/
++ echo '== extracted debs/libxkbcommon0_1.5.0-1_amd64.deb'
+== extracted debs/libxkbcommon0_1.5.0-1_amd64.deb
++ for d in debs/*.deb
++ '[' -e debs/libxrender1_0.9.10-1.1_amd64.deb ']'
++ dpkg-deb -x debs/libxrender1_0.9.10-1.1_amd64.deb sysroot/
++ echo '== extracted debs/libxrender1_0.9.10-1.1_amd64.deb'
+== extracted debs/libxrender1_0.9.10-1.1_amd64.deb
++ for d in debs/*.deb
++ '[' -e debs/libxt6_1.2.1-1.1_amd64.deb ']'
++ dpkg-deb -x debs/libxt6_1.2.1-1.1_amd64.deb sysroot/
++ echo '== extracted debs/libxt6_1.2.1-1.1_amd64.deb'
+== extracted debs/libxt6_1.2.1-1.1_amd64.deb
++ for d in debs/*.deb
++ '[' -e debs/libxxf86vm1_1.1.4-1+b2_amd64.deb ']'
++ dpkg-deb -x debs/libxxf86vm1_1.1.4-1+b2_amd64.deb sysroot/
++ echo '== extracted debs/libxxf86vm1_1.1.4-1+b2_amd64.deb'
+== extracted debs/libxxf86vm1_1.1.4-1+b2_amd64.deb
++ cd sysroot
++ find . -type f '!' -name '*.so*' -delete
+total 32200
+drwxr-xr-x 2 runner runner     4096 Sep 17 11:54 .
+drwxr-xr-x 7 runner runner     4096 Sep 17 11:54 ..
+-rw-r--r-- 1 runner runner 32188916 Sep 17 11:54 Subsistence_1.0.0-alpha.zip
+-rw-r--r-- 1 runner runner   771156 Sep 17 11:54 sysroot-bookworm.tar.gz

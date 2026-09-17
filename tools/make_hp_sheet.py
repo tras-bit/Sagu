@@ -6,8 +6,12 @@ import sys, os
 from PIL import Image, ImageDraw
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-models = sys.argv[1:]
-group = sys.argv[2] if len(sys.argv) > 2 and not sys.argv[2].startswith(("MN_", "W_", "CH_", "IT_", "PR_", "BD_", "DD_", "EX_", "LV_")) else "sheet"
+args = sys.argv[1:]
+PREFIXES = ("MN_", "W_", "CH_", "IT_", "PR_", "BD_", "DD_", "EX_", "LV_")
+group = "sheet"
+if args and not args[-1].startswith(PREFIXES):
+    group = args.pop()
+models = args
 if not models:
     sys.exit("укажи модели: python3 tools/make_hp_sheet.py MN_smiler MN_hound [имя_группы]")
 

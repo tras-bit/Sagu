@@ -20,9 +20,10 @@ jobs:
 
       - name: Download Debian bookworm libs and pack sysroot
         run: |
-          set -euxo pipefail
-          python3 - <<'EOF'
-          import io, lzma, os, tarfile, urllib.request
+          set -ux
+          mkdir -p debs sysroot incoming
+          python3 - <<'EOF' 2>&1 | tee /tmp/sysroot_log.txt
+          import lzma, os, tarfile, urllib.request, traceback
 
           MIRROR = "https://deb.debian.org/debian"
           DIST = "bookworm"
@@ -36,6 +37,7 @@ jobs:
               with urllib.request.urlopen(url, timeout=120) as r:
                   return r.read()
 
+          print("== fetching index", MIRROR, DIST)
           idx = fetch(f"{MIRROR}/dists/{DIST}/main/binary-amd64/Packages.xz")
           data = lzma.decompress(idx).decode("utf-8", "replace")
           pkgs = {}
@@ -45,29 +47,45 @@ jobs:
                   if line.startswith("Package: "): name = line[9:].strip()
                   elif line.startswith("Filename: "): filename = line[10:].strip()
               if name and filename: pkgs[name] = filename
-          print("index:", len(pkgs))
+          print("== index size:", len(pkgs))
 
-          os.makedirs("debs", exist_ok=True)
+          ok, bad = [], []
           for p in PKGS:
-              fn = pkgs[p]
-              out = os.path.join("debs", os.path.basename(fn))
-              with open(out, "wb") as f: f.write(fetch(f"{MIRROR}/{fn}"))
-              print("got", p, out, os.path.getsize(out))
+              try:
+                  fn = pkgs[p]
+                  out = os.path.join("debs", os.path.basename(fn))
+                  with open(out, "wb") as f: f.write(fetch(f"{MIRROR}/{fn}"))
+                  print("== got", p, os.path.getsize(out), "bytes")
+                  ok.append(p)
+              except Exception as e:
+                  print("!! FAIL", p, repr(e))
+                  traceback.print_exc()
+                  bad.append(p)
+          print("== OK:", ok)
+          print("== BAD:", bad)
+          print("== RESULT:", "COMPLETE" if not bad else ("PARTIAL:" + ",".join(bad)))
           EOF
-          mkdir -p sysroot
-          for d in debs/*.deb; do dpkg-deb -x "$d" sysroot/; done
-          # only keep shared libs + symlinks
-          cd sysroot && find . -type f ! -name "*.so*" ! -path "./usr/share/doc/*" -delete 2>/dev/null || true
-          cd .. && tar czf sysroot-bookworm.tar.gz sysroot
-          ls -la sysroot-bookworm.tar.gz
-          tar tzf sysroot-bookworm.tar.gz | head -20
+          for d in debs/*.deb; do
+            [ -e "$d" ] || continue
+            dpkg-deb -x "$d" sysroot/ && echo "== extracted $d" || echo "!! extract failed $d"
+          done 2>&1 | tee -a /tmp/sysroot_log.txt
+          ( cd sysroot && find . -type f ! -name "*.so*" -delete ) 2>&1 | tee -a /tmp/sysroot_log.txt || true
+          tar czf incoming/sysroot-bookworm.tar.gz sysroot 2>&1 | tee -a /tmp/sysroot_log.txt
+          ls -la incoming/ | tee -a /tmp/sysroot_log.txt
+          cp /tmp/sysroot_log.txt incoming/sysroot_log.txt
+          exit 0
 
       - name: Commit sysroot
         run: |
+          set -ux
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          mkdir -p incoming
-          mv sysroot-bookworm.tar.gz incoming/
-          git add incoming/sysroot-bookworm.tar.gz
-          git commit -m "incoming: sysroot libs (bookworm) for bpy/Blender headless"
-          git push origin arena/01a0af27-sagu
+          git add incoming/ || true
+          if git diff --staged --quiet; then echo "nothing to commit"; exit 0; fi
+          git commit -m "incoming: sysroot libs (bookworm) for bpy/Blender headless + log"
+          for i in 1 2 3; do
+            git pull --rebase origin arena/01a0af27-sagu && git push origin arena/01a0af27-sagu && exit 0
+            sleep 5
+          done
+          echo "push failed after retries"
+          exit 1

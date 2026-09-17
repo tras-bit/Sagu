@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - arena/01a0af27-sagu
+    paths:
+      - .github/workflows/fetch-archive.yml
 
 jobs:
   fetch:

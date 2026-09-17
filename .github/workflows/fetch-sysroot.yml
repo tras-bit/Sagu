@@ -1,0 +1,73 @@
+name: Fetch sysroot libs for bpy (Blender as Python module)
+
+on:
+  push:
+    branches:
+      - arena/01a0af27-sagu
+    paths:
+      - .github/workflows/fetch-sysroot.yml
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: arena/01a0af27-sagu
+          fetch-depth: 1
+
+      - name: Download Debian bookworm libs and pack sysroot
+        run: |
+          set -euxo pipefail
+          python3 - <<'EOF'
+          import io, lzma, os, tarfile, urllib.request
+
+          MIRROR = "https://deb.debian.org/debian"
+          DIST = "bookworm"
+          PKGS = [
+              "libgl1", "libglx0", "libopengl0", "libglvnd0", "libegl1",
+              "libice6", "libsm6", "libxfixes3", "libxi6", "libxrender1",
+              "libxt6", "libxkbcommon0", "libxxf86vm1",
+          ]
+
+          def fetch(url):
+              with urllib.request.urlopen(url, timeout=120) as r:
+                  return r.read()
+
+          idx = fetch(f"{MIRROR}/dists/{DIST}/main/binary-amd64/Packages.xz")
+          data = lzma.decompress(idx).decode("utf-8", "replace")
+          pkgs = {}
+          for block in data.split("\n\n"):
+              name = filename = None
+              for line in block.splitlines():
+                  if line.startswith("Package: "): name = line[9:].strip()
+                  elif line.startswith("Filename: "): filename = line[10:].strip()
+              if name and filename: pkgs[name] = filename
+          print("index:", len(pkgs))
+
+          os.makedirs("debs", exist_ok=True)
+          for p in PKGS:
+              fn = pkgs[p]
+              out = os.path.join("debs", os.path.basename(fn))
+              with open(out, "wb") as f: f.write(fetch(f"{MIRROR}/{fn}"))
+              print("got", p, out, os.path.getsize(out))
+          EOF
+          mkdir -p sysroot
+          for d in debs/*.deb; do dpkg-deb -x "$d" sysroot/; done
+          # only keep shared libs + symlinks
+          cd sysroot && find . -type f ! -name "*.so*" ! -path "./usr/share/doc/*" -delete 2>/dev/null || true
+          cd .. && tar czf sysroot-bookworm.tar.gz sysroot
+          ls -la sysroot-bookworm.tar.gz
+          tar tzf sysroot-bookworm.tar.gz | head -20
+
+      - name: Commit sysroot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p incoming
+          mv sysroot-bookworm.tar.gz incoming/
+          git add incoming/sysroot-bookworm.tar.gz
+          git commit -m "incoming: sysroot libs (bookworm) for bpy/Blender headless"
+          git push origin arena/01a0af27-sagu

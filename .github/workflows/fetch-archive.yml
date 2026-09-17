@@ -1,7 +1,9 @@
 name: Fetch project archive from Google Drive
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - arena/01a0af27-sagu
 
 jobs:
   fetch:

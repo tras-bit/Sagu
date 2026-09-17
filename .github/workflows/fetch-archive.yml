@@ -1,0 +1,35 @@
+name: Fetch project archive from Google Drive
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: arena/01a0af27-sagu
+          fetch-depth: 0
+
+      - name: Download archive from Google Drive
+        run: |
+          set -euxo pipefail
+          pip install gdown
+          gdown --fuzzy "https://drive.google.com/file/d/1p7pCYIUU1xHx1U2sVqmycBomQLHVxuk7/view?usp=drive_link" -O /tmp/project.zip || \
+            curl -fL -o /tmp/project.zip "https://drive.usercontent.google.com/download?id=1p7pCYIUU1xHx1U2sVqmycBomQLHVxuk7&export=download&confirm=t"
+          file /tmp/project.zip
+          ls -la /tmp/project.zip
+
+      - name: Commit archive
+        run: |
+          set -euxo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p incoming
+          cp /tmp/project.zip "incoming/Subsistence_1.0.0-alpha.zip"
+          git add incoming
+          git commit -m "incoming: add Subsistence_1.0.0-alpha project archive"
+          git push origin arena/01a0af27-sagu

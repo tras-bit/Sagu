@@ -1,0 +1,29 @@
+# Unity — генерируемое
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uilds/
+[Bb]uild/
+[Ll]ogs/
+[Uu]serSettings/
+MemoryCaptures/
+Recordings/
+*.csproj
+*.sln
+*.user
+*.pidb
+*.pdb
+*.mdb
+sysinfo.txt
+*.apk
+*.aab
+*.unitypackage
+*.app
+crashlytics-build.properties
+
+# Ответы опросника (сессионные данные, читает ИИ)
+answers/
+
+# ОС
+.DS_Store
+Thumbs.db

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SUBSISTENCE — опросник v3 · 40 вопросов от новой ИИ</title>
+<style>
+:root{
+  --g:#5cff92; --g-bright:#a4ffc4; --g-dim:#2f8a56; --bg:#02100a; --bg2:#031509;
+  --br:#155c33; --br-bright:#2fa763; --card:#04190f; --yellow:#ffd54a; --warn:#ffb347;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:
+    radial-gradient(1200px 500px at 50% -100px,#06301b 0%,transparent 60%),var(--bg);
+  font-family:"Courier New",Consolas,"Liberation Mono",Menlo,monospace;
+  font-size:15px;color:var(--g);text-shadow:0 0 7px rgba(92,255,146,.25);
+}
+body::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:99;
+  background:repeating-linear-gradient(180deg, rgba(0,0,0,.12) 0 1px, rgba(0,0,0,0) 1px 3px);
+}
+a{color:var(--g-bright)}
+.wrap{max-width:980px;margin:0 auto;padding:0 12px 60px}
+
+/* ШАПКА */
+header{
+  position:sticky;top:0;z-index:50;
+  background:linear-gradient(180deg,#04160c,#02100a);
+  border-bottom:1px solid var(--br);box-shadow:0 4px 18px rgba(0,0,0,.5);
+}
+.hbar{max-width:980px;margin:0 auto;padding:8px 12px 8px;display:flex;flex-direction:column;gap:7px}
+.row1{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.t{color:var(--g-bright);letter-spacing:.6px;font-weight:bold}
+.t small{color:var(--g-dim);font-weight:normal}
+.clock{color:var(--g-dim);font-size:12.5px}
+.row2{display:flex;align-items:center;gap:12px}
+.pbar{flex:1;height:13px;border:1px solid var(--br);position:relative;min-width:120px;background:#02180d}
+.pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#175c35,#5cff92);transition:width .25s}
+.cnt{font-size:12.5px;color:var(--g-dim);white-space:nowrap}
+.row3{display:flex;gap:7px;flex-wrap:wrap}
+button{
+  font:inherit;font-size:12.5px;background:transparent;border:1px solid var(--br-bright);color:#8effb4;
+  padding:6px 11px;cursor:pointer;letter-spacing:.3px;text-shadow:inherit;
+}
+button:hover{background:#0b2a18;color:#eaffef}
+button.primary{background:#0b3d22;border-color:var(--g);color:#dfffe9}
+button.primary:hover{background:#125c33}
+
+/* ПАНЕЛИ */
+.panel{border:1px solid var(--br);background:linear-gradient(180deg,var(--card),#02120a);padding:14px 16px;margin:16px 0;position:relative}
+.panel h2{margin:0 0 8px;color:var(--g-bright);font-size:15px;letter-spacing:.8px}
+.panel p{margin:6px 0;line-height:1.55}
+.dim{color:var(--g-dim)}
+.b{color:var(--g-bright)}
+
+/* ЗАФИКСИРОВАННЫЙ ОТВЕТ — ХАЙ-ПОЛИ */
+.locked{
+  border:1px solid #7a6a1f;background:linear-gradient(180deg,#1d1802,#0e0b01);
+  color:#ffe289;text-shadow:0 0 8px rgba(255,213,74,.3);padding:13px 16px;margin:16px 0;
+}
+.locked .tag{display:inline-block;border:1px solid #7a6a1f;padding:1px 7px;font-size:11.5px;margin-right:8px;color:#ffd54a;letter-spacing:1px}
+.locked b{color:#ffe89a}
+
+/* ЦИФРЫ */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--br);padding:8px 10px;background:#02140b}
+.stat .v{color:var(--g-bright);font-size:16px}
+.stat .k{color:var(--g-dim);font-size:11.5px;margin-top:2px}
+
+/* ПРЕВЬЮ */
+previews, .sheets{display:grid;gap:10px}
+.sheet{border:1px solid var(--br);background:#01110a;padding:6px}
+.sheet img{width:100%;display:block}
+.sheet span{display:block;color:var(--g-dim);font-size:11.5px;padding:4px 4px 0}
+
+/* ГРУППЫ */
+section{margin:22px 0 10px}
+.ghead{
+  display:flex;align-items:baseline;gap:10px;border-bottom:1px dashed var(--br);
+  padding-bottom:6px;margin-bottom:12px;
+}
+.gletter{
+  border:1px solid var(--br-bright);color:var(--g-bright);padding:2px 9px;font-weight:bold;letter-spacing:1px;
+}
+.gtitle{color:var(--g-bright);letter-spacing:.4px}
+.gsub{color:var(--g-dim);font-size:12.5px;margin-left:auto;text-align:right}
+
+/* ВОПРОСЫ */
+.q{border:1px solid var(--br);background:linear-gradient(180deg,var(--card),#02120a);padding:12px 14px;margin:10px 0}
+.q.done{border-color:var(--br-bright)}
+.qhead{display:flex;gap:9px;align-items:baseline;margin-bottom:9px}
+.qnum{color:var(--yellow);white-space:nowrap}
+.qtxt{color:#c9ffdd;line-height:1.45}
+.qhint{color:var(--g-dim);font-size:12.3px;margin:0 0 9px;line-height:1.5;border-left:2px solid #124a29;padding-left:9px}
+.opt{display:flex;gap:9px;align-items:flex-start;padding:6px 9px;border:1px solid transparent;cursor:pointer;line-height:1.45}
+.opt:hover{border-color:#1d7a45;background:#05271205}
+.opt input{margin-top:3px;accent-color:#37d977}
+.opt.sel{border-color:var(--br-bright);background:#07240f}
+.opt .k{color:var(--yellow)}
+.opt .star{color:var(--g-dim);font-size:11.5px;white-space:nowrap}
+.custom{margin-top:8px}
+.custom input{
+  width:100%;background:#01170c;border:1px solid var(--br);color:var(--g-bright);
+  font:inherit;font-size:13.5px;padding:7px 9px;outline:none;
+}
+.custom input:focus{border-color:var(--br-bright)}
+.qbadge{font-size:11px;border:1px solid var(--br);color:var(--g-dim);padding:1px 6px;margin-left:auto;white-space:nowrap}
+.qbadge.ok{color:#02160b;background:var(--g);border-color:var(--g)}
+
+footer{margin-top:30px;color:var(--g-dim);font-size:12px;line-height:1.6}
+#toast{
+  position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(140%);
+  background:#06301b;border:1px solid var(--g);color:#d9ffe7;padding:10px 18px;z-index:200;
+  transition:transform .3s;max-width:90vw;text-align:center;font-size:13.5px;
+}
+#toast.show{transform:translateX(-50%) translateY(0)}
+@media(max-width:640px){
+  body{font-size:14px}
+  .gsub{display:none}
+  .qhead{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hbar">
+    <div class="row1">
+      <div class="t">SUBSISTENCE // ОПРОСНИК v3 <small>· 40 вопросов от новой ИИ</small></div>
+      <div class="clock" id="clock"></div>
+    </div>
+    <div class="row2">
+      <div class="pbar"><i id="bari"></i></div>
+      <div class="cnt"><span id="cnt">0</span>/40 отвечено</div>
+    </div>
+    <div class="row3">
+      <button class="primary" onclick="submitAnswers()">▸ ОТПРАВИТЬ ОТВЕТЫ ИИ</button>
+      <button onclick="fillStars()">✶ Ответить всё рекомендациями</button>
+      <button onclick="copyShort()">⧉ Копировать кратко (1а 2б…)</button>
+      <button onclick="downloadJson()">⇩ Скачать JSON</button>
+      <button onclick="resetAll()" style="border-color:#7a2f2f;color:#ff9d9d">✕ Сброс</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<div class="panel">
+  <h2>ПРИВЕТ! Я — НОВАЯ ИИ, ПРОЕКТ ПЕРЕДАН МНЕ. ВОТ ЧТО Я УЖЕ СДЕЛАЛА</h2>
+  <p>Архив <span class="b">Subsistence_1.0.0-alpha.zip</span> (470 файлов) скачан с твоего гугл-диска и изучен целиком,
+  <span class="b">Blender 5.0 уже работает</span> в моей песочнице (проверено: импорт твоих FBX, замер полигонов, тестовый рендер —
+  <span class="dim">docs/previews/_render_sandbox_test.png</span>). Проект переехал в git-репозиторий <span class="b">tras-bit/Sagu</span> — теперь весь код, модели и доки под версионным контролем.</p>
+  <div class="stats">
+    <div class="stat"><div class="v">159</div><div class="k">FBX-моделей (9 оружие · 103 пропса · 10 персонажей · 37 предметов)</div></div>
+    <div class="stat"><div class="v">~18 900</div><div class="k">строк C# · 51 файл · 230 типов</div></div>
+    <div class="stat"><div class="v">180</div><div class="k">предметов · 93 рецепта · 15 элементов стройки</div></div>
+    <div class="stat"><div class="v">3</div><div class="k">уровня: Жёлтые коридоры → Бассейны → Электростанция</div></div>
+    <div class="stat"><div class="v">128</div><div class="k">сетевых слотов (Mirror), AOI, сервер-авторитет</div></div>
+    <div class="stat"><div class="v">120 FPS</div><div class="k">цель на RTX 3060 (из ответов v1)</div></div>
+  </div>
+  <p class="dim">Замер полигоонов сегодня (Blender 5.0.1): АК ≈ 10.2k трис · Smiler ≈ 16.3k · хазмат ≈ 30.9k. Это средний поликаунт, до хай-поли пока не дотягивает — что и будем чинить.</p>
+</div>
+
+<div class="locked">
+  <span class="tag">ЗАФИКСИРОВАНО ТОБОЙ</span>
+  <b>ВСЕ МОДЕЛИ ДЕЛАЕМ СРАЗУ ХАЙ-ПОЛИ.</b> Это ответ на «какой поликаунт/детализация» — больше не спрашиваю.
+  Вопросы группы B только калибруют, КАК именно готовить хай-поли (запекание, LOD-ы, текстуры), чтобы не убить 120 FPS при 100 игроках.
+</div>
+
+<div class="panel">
+  <h2>КАК ОТВЕЧАТЬ</h2>
+  <p>• Кликай вариант (а/б/в/г) — или пиши свой текст в поле снизу вопроса.<br>
+     • <span class="b">✶ рекомендую</span> — что я сделаю, если вопрос останется без ответа (промолчишь = соглашаешься).<br>
+     • Прогресс сохраняется сам. В конце жми <span class="b">«ОТПРАВИТЬ ОТВЕТЫ ИИ»</span> — ответы прилетят прямо мне в песочницу.<br>
+     • Можно по-старинке: «<span class="b">1а 2б 3в…</span>» прямо в чат — кнопка «Копировать кратко» соберёт такую строку за тебя.</p>
+  <p class="dim">Прошлые опросники (v1 — 57 вопросов, v2 — 22) уже вшиты в код — docs/ANSWERS.md и docs/ANSWERS_V2.md. Здесь только новое, что реально нужно мне для продолжения.</p>
+</div>
+
+<div class="panel">
+  <h2>ЧТО УЖЕ ЕСТЬ (превью-листы из архива)</h2>
+  <div class="sheets">
+    <div class="sheet"><img loading="lazy" src="../docs/previews/_sheet_weapons.png" alt="оружие"><span>_sheet_weapons.png — 9 стволов (v4, 62 531 трис суммарно)</span></div>
+    <div class="sheet"><img loading="lazy" src="../docs/previews/_sheet_monsters.png" alt="монстры"><span>_sheet_monsters.png — монстры Backrooms</span></div>
+    <div class="sheet"><img loading="lazy" src="../docs/previews/_render_sandbox_test.png" alt="тест"><span>_render_sandbox_test.png — мой первый рендер в песочнице сегодня: CH_hazmat_suit, Cycles CPU, 5 сек</span></div>
+  </div>
+</div>
+
+<main id="main"></main>
+
+<footer>
+  SUBSISTENCE · опросник v3 · собран новой ИИ в песочнице Arena · ответы: POST /api/answers → answers/latest.json ·
+  резервная копия в браузере: localStorage «subsistence_answers_v3» · формат JSON совместим с site/questions.html (ключи NN_id / NN_id_custom)
+</footer>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ================== ДАННЫЕ: 40 ВОПРОСОВ ================== */
+const GROUPS = {
+  A:"Твоё окружение и статус проекта",
+  B:"Хай-поли пайплайн",
+  C:"Персонажи и монстры",
+  D:"Оружие и предметы",
+  E:"Уровни и мир",
+  F:"Сеть и сборка",
+  G:"Звук",
+  H:"Что дальше"
+};
+
+const QUESTIONS = [
+/* ---------- A. ОКРУЖЕНИЕ (6) ---------- */
+{n:1,id:"01_unity_open",g:"A",q:"Ты сам открывал проект в Unity 2022.3.62f2 после альфы?",
+ hint:"Предыдущая ИИ чинила ошибки компиляции по твоим скринам (2 раунда, все закрыты). Нужно понять, чисто ли сейчас.",
+ opts:[["а","открывал — компилируется и играется"],["б","открывал — были ошибки (пришлю текст/скрин в чат)"],["в","ещё не открывал"],["г","Unity не установлена"]],star:"в"},
+{n:2,id:"02_exe_build",g:"A",q:"Собирал ли exe (BUILD_WINDOWS.bat или меню Subsistence → 9)?",
+ hint:"Сборка ни разу не запускалась на стороне прошлой ИИ — это честно написано в PROJECT_STATUS.md.",
+ opts:[["а","собрался — играл"],["б","собрался, но с проблемами"],["в","не пробовал"]],star:"в"},
+{n:3,id:"03_hardware",g:"A",q:"На каком железе будешь играть и тестировать?",
+ hint:"Цель из v1 — 120 FPS на RTX 3060. От этого зависят бюджеты хай-поли и настройки HDRP.",
+ opts:[["а","RTX 3060 или лучше"],["б","средний ПК"],["в","слабый ПК / ноутбук"],["г","не знаю / несколько разных"]],star:"б"},
+{n:4,id:"04_mirror_on",g:"A",q:"Mirror (меню Subsistence → 3) включал? HOST/JOIN по сети пробовал?",
+ opts:[["а","да, работало"],["б","пробовал — не заработало (опишу)"],["в","не трогал"]],star:"в"},
+{n:5,id:"05_roles",g:"A",q:"Как делим работу дальше?",
+ opts:[["а","я делаю всё в песочнице, ты тестируешь и играешь"],["б","ты тоже сам правишь в Unity — я даю готовые файлы"],["в","решим по ходу"]],star:"а"},
+{n:6,id:"06_unity_version",g:"A",q:"Версию Unity держим?",
+ opts:[["а","строго 2022.3.62f2 (решение v1)"],["б","можно апгрейд на Unity 6"],["в","на твоё усмотрение"]],star:"а"},
+
+/* ---------- B. ХАЙ-ПОЛИ (8) ---------- */
+{n:7,id:"07_hp_scope",g:"B",q:"Масштаб хай-поли: что именно переделываем?",
+ opts:[["а","все 159 моделей, постепенно"],["б","в приоритете: оружие + персонажи + монстры, потом остальное"],["в","только новые модели — старые не трогаем"]],star:"б"},
+{n:8,id:"08_hp_method",g:"B",q:"СПОСОБ хай-поли — это ключевое решение всего арта:",
+ hint:"Чистый хай-поли в рантайме при 100 игроках и 120 FPS не вывозит даже RTX 4090. Индустрия (и Rust) делает иначе.",
+ opts:[["а","AAA-пайплайн: скульптится/собирается хай-поли → нормали и AO запекаются на игровую сетку. В игре вид «хай-поли», но быстрый"],["б","чистый хай-поли прямо в рантайме, без запечения (красиво вплотную, страдает FPS)"],["в","хай-поли только для превью/иконок/магазина, в игре — как сейчас"]],star:"а"},
+{n:9,id:"09_hp_budget_chars",g:"B",q:"Игровой бюджет (после запекания) для персонажей и монстров?",
+ hint:"Для сравнения: герои AAA-игр — 40–80k трис; сейчас хазмат ≈ 31k.",
+ opts:[["а","30–60k трис"],["б","100–200k"],["в","без лимитов — красота важнее"]],star:"а"},
+{n:10,id:"10_hp_budget_items",g:"B",q:"Игровой бюджет для оружия и предметов (видны в руках близко)?",
+ hint:"Сейчас АК ≈ 10.2k. В Rust оружие ~10–20k.",
+ opts:[["а","10–25k"],["б","30–60k"],["в","без лимитов"]],star:"б"},
+{n:11,id:"11_hp_textures",g:"B",q:"Запечённые PBR-текстуры: сейчас материалы процедурные, карт нет. Какое разрешение печём?",
+ opts:[["а","мелочь 1K, оружие и персонажи 2K"],["б","всё 2K"],["в","всё 4K (тяжело, но максимально)"],["г","оставить процедурные материалы, текстуры не печём"]],star:"а"},
+{n:12,id:"12_hp_lods",g:"B",q:"LOD-ы (автоупрощение моделей вдали от камеры)?",
+ hint:"100 игроков + постройки = тысячи объектов в кадре. LOD-ы — главный спасатель FPS.",
+ opts:[["а","2–3 автолода на модель (генерю декимацией в пайплайне)"],["б","один LOD, но аккуратный"],["в","не нужны"]],star:"а"},
+{n:13,id:"13_hp_bake_auto",g:"B",q:"Запекание нормалей/AO настраиваю автоматом в пайплайне (Blender Cycles CPU, уже работает)?",
+ opts:[["а","да, полный автопрогон в build_models.sh — модель на входе, PBR-сет на выходе"],["б","печь выборочно, только где критично (оружие, персонажи)"],["в","запекание не нужно"]],star:"а"},
+{n:14,id:"14_hp_start",g:"B",q:"С чего начать хай-поли пасс?",
+ opts:[["а","оружие (9 стволов)"],["б","монстры"],["в","персонажи (хазмат, торговец)"],["г","предметы и декор уровней"]],star:"а"},
+
+/* ---------- C. ПЕРСОНАЖИ И МОНСТРЫ (6) ---------- */
+{n:15,id:"15_rigs",g:"C",q:"Риг и скиннинг: сейчас вся анимация процедурная, ригов нет вообще. Делаем настоящие риги?",
+ hint:"Без рига хай-поли модель может красиво стоять, но по-настоящему двигаться не будет.",
+ opts:[["а","полный риг + скиннинг всем монстрам и персонажам"],["б","риг только гуманоидам (хазмат, торговец, partygoer), монстрам — процедурка"],["в","оставить процедурную анимацию как есть"]],star:"б"},
+{n:16,id:"16_anims",g:"C",q:"Анимации: keyframe-клипы или процедурные?",
+ opts:[["а","keyframe-наборы на риге: idle/walk/run/attack/death"],["б","процедурные, как сейчас (23 клипа, 0 файлов)"],["в","смешать: база keyframe, слои процедурные"]],star:"в"},
+{n:17,id:"17_boss_bacteria",g:"C",q:"Босс Bacteria — в v1 отменён, но модель (34k трис) лежит в архиве. Возвращаем?",
+ opts:[["а","вернуть как рейд-босса L3 (электростанция)"],["б","вернуть как редкий случайный евент"],["в","оставить отменённым"]],star:"в"},
+{n:18,id:"18_new_monsters",g:"C",q:"Свои монстры по уровням? Сейчас 5 видов общих (Smiler, Hound, Partygoer, Skin-Stealer, Whisperer/Spark).",
+ opts:[["а","да: L37 — водяной/утаскивающий под воду, L3 — обожжённый/электрический"],["б","по 2 уникальных на каждый уровень"],["в","хватает текущих"]],star:"а"},
+{n:19,id:"19_fp_arms",g:"C",q:"Первое лицо: нужны хай-поли руки/тело игрока?",
+ opts:[["а","руки + оружие в руках (viewmodel)"],["б","полное тело (видно при смерти/в инвентаре)"],["в","не нужно, как сейчас"]],star:"а"},
+{n:20,id:"20_npc_redesign",g:"C",q:"Хазмат и торговец: редизайн под хай-поли (шланги, стёжки, ткань, потёртости, наклейки)?",
+ opts:[["а","полный редизайн"],["б","лёгкий апгрейд деталей"],["в","оставить как есть"]],star:"б"},
+
+/* ---------- D. ОРУЖИЕ И ПРЕДМЕТЫ (5) ---------- */
+{n:21,id:"21_arsenal",g:"D",q:"Арсенал: 9 стволов (АКМ, M4, MP5, помпа, M249, болтовка, РПГ, Ф-1, C4). Расширяем?",
+ opts:[["а","хватит 9 — доводим их до идеала"],["б","раст-набор: пистолет M92, револьвер, лук, копьё, самопал"],["в","фирменные стволы уровней: L0 — обрез, L37 — гарпун, L3 — электрошок/рельсотрон"],["г","и «б», и «в» — полный список"]],star:"г"},
+{n:22,id:"22_weapon_style",g:"D",q:"Стиль оружия?",
+ opts:[["а","реальные прототипы (как сейчас)"],["б","самоделки из подручного (сеттинг выживания)"],["в","смешать: низкие тиры — самоделки, высокие — боевое"]],star:"а"},
+{n:23,id:"23_attachments",g:"D",q:"Обвесы (6 слотов уже в коде): моделировать отдельными хай-поли моделями?",
+ opts:[["а","полный набор: прицелы, глушители, рукоятки, фонари"],["б","пара базовых: прицел + глушитель"],["в","пока не надо"]],star:"б"},
+{n:24,id:"24_icons",g:"D",q:"180 иконок 96×96: перерендерить из хай-поли моделей покрупнее?",
+ opts:[["а","да, 256×256 рендеры хай-поли моделей"],["б","оставить как есть"]],star:"а"},
+{n:25,id:"25_skins",g:"D",q:"14 скинов в магазине (SKINS): переделать под хай-поли?",
+ opts:[["а","да, переделать"],["б","оставить"],["в","переделать и добавить ещё"]],star:"а"},
+
+/* ---------- E. УРОВНИ И МИР (5) ---------- */
+{n:26,id:"26_loot_split",g:"E",q:"Лут: у каждого уровня свой состав ящиков? Сейчас тир зависит от уровня, но состав общий.",
+ opts:[["а","да, уникальные наборы: L0 еда/вода/тряпки, L37 аптечки/дайвинг, L3 электроника/ключ-карты"],["б","общий пул, как сейчас"]],star:"а"},
+{n:27,id:"27_layouts",g:"E",q:"Планировки уровней различить? Сейчас одна сетка на все три.",
+ opts:[["а","да: L0 — узкие коридоры 2.4 м, L37 — большие залы с водой, L3 — машинные залы с колоннами"],["б","оставить общую сетку"]],star:"а"},
+{n:28,id:"28_atmos_light",g:"E",q:"Свет/туман: L0 жёлтая дымка, L37 бирюза+пар, L3 аварийный красный с миганием?",
+ opts:[["а","да, контрастные, как задумано"],["б","оставить как есть"]],star:"а"},
+{n:29,id:"29_level4",g:"E",q:"Четвёртый уровень?",
+ opts:[["а","нет, трёх достаточно"],["б","да! (напиши какой в поле ниже)"],["в","да, на усмотрение ИИ"]],star:"а"},
+{n:30,id:"30_map_size",g:"E",q:"Размер уровня 1×1 км — оставить?",
+ opts:[["а","оставить"],["б","больше (2×2 км)"],["в","меньше"]],star:"а"},
+
+/* ---------- F. СЕТЬ И СБОРКА (6) ---------- */
+{n:31,id:"31_net_test",g:"F",q:"Сетевой тест на 2–4 игрока: когда?",
+ opts:[["а","следующий шаг сразу, до арта"],["б","после хай-поли арта"],["в","после стабильного exe и плейтеста в одиночке"]],star:"в"},
+{n:32,id:"32_server_os",g:"F",q:"Выделенный сервер: в v1 решили «только Windows». Пересматриваем?",
+ opts:[["а","только Windows, как решено"],["б","добавить Linux dedicated (дешевле хостить)"],["в","оба"]],star:"а"},
+{n:33,id:"33_build_ci",g:"F",q:"Сборка exe: кто собирает?",
+ opts:[["а","ты локально батником BUILD_WINDOWS.bat (как сейчас)"],["б","попробовать CI — сборка в облаке по кнопке"]],star:"а"},
+{n:34,id:"34_platform",g:"F",q:"Куда в итоге публикуем игру?",
+ opts:[["а","просто exe для своих"],["б","itch.io"],["в","Steam"],["г","решим позже"]],star:"г"},
+{n:35,id:"35_wipe",g:"F",q:"Вайп (сброс сервера) раз в месяц — подтверждаем решение v1?",
+ opts:[["а","да, раз в месяц"],["б","чаще (2 недели)"],["в","реже"],["г","без вайпов вообще"]],star:"а"},
+{n:36,id:"36_voice",g:"F",q:"Голосовой чат (проксимити 20 м + рация, уже в коде): включаем?",
+ opts:[["а","включаем"],["б","выключить"],["в","позже"]],star:"а"},
+
+/* ---------- G. ЗВУК (3) ---------- */
+{n:37,id:"37_sfx",g:"G",q:"Звук: процедурный (23 клипа математикой, ноль файлов) или сэмплы?",
+ opts:[["а","оставить процедурный"],["б","сэмплы .wav (архив вырастет на 50–150 МБ)"],["в","смешать: фон сэмплами, остальное процедурно"]],star:"в"},
+{n:38,id:"38_music",g:"G",q:"Музыки нет (решение v2). Подтверждаешь?",
+ opts:[["а","да — только атмосфера (гул ламп, капель, шаги)"],["б","добавить редкие радио-помехи L0"],["в","добавить тревожную музыку при погоне"]],star:"а"},
+{n:39,id:"39_gun_foley",g:"G",q:"Звуки выстрелов/перезарядки под хай-поли оружие?",
+ opts:[["а","сэмплы выстрелов — важно для ощущения"],["б","процедурные норм"]],star:"б"},
+
+/* ---------- H. ДАЛЬШЕ (1) ---------- */
+{n:40,id:"40_first_step",g:"H",q:"Что делаем ПЕРВЫМ, как ответишь?",
+ opts:[["а","хай-поли пасс моделей (начну с группы из вопроса 14)"],["б","сетевой тест на 2–4 игрока"],["в","стабильный exe + прогон плейтест-чеклиста docs/PLAYTEST.md"],["г","новые фичи (напиши какие)"]],star:"а"}
+];
+
+/* ================== ХРАНИЛИЩЕ ================== */
+const LS_KEY = "subsistence_answers_v3";
+let answers = {};
+try { answers = JSON.parse(localStorage.getItem(LS_KEY) || "{}") || {}; } catch(e){ answers = {}; }
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(answers)); refresh(); }
+
+/* ================== РЕНДЕР ================== */
+const main = document.getElementById("main");
+let html = "", lastGroup = null;
+for (const q of QUESTIONS){
+  if (q.g !== lastGroup){
+    lastGroup = q.g;
+    html += `<section id="grp${q.g}"><div class="ghead">
+      <span class="gletter">${q.g}</span><span class="gtitle">${GROUPS[q.g]}</span>
+      <span class="gsub">${QUESTIONS.filter(x=>x.g===q.g).length} вопр.</span></div>`;
+  }
+  html += `<div class="q" id="q${q.n}" data-id="${q.id}">
+    <div class="qhead"><span class="qnum">${q.n}.</span><span class="qtxt">${q.q}</span><span class="qbadge" id="bdg${q.n}">—</span></div>
+    ${q.hint?`<p class="qhint">${q.hint}</p>`:""}
+    ${q.opts.map(([k,t])=>{
+      const isStar = (k===q.star);
+      return `<label class="opt" id="o_${q.id}_${k}">
+        <input type="radio" name="${q.id}" value="${k}" onchange="pick('${q.id}','${k}')">
+        <span><span class="k">${k})</span> ${t}${isStar?' <span class="star">✶ рекомендую</span>':''}</span></label>`;
+    }).join("")}
+    <div class="custom"><input type="text" placeholder="свой вариант / комментарий…" value="${(answers[q.id+"_custom"]||"").replace(/"/g,"&quot;")}" oninput="customInput('${q.id}',this.value)"></div>
+  </div>`;
+  const nextQ = QUESTIONS[QUESTIONS.indexOf(q)+1];
+  if (!nextQ || nextQ.g !== q.g) html += `</section>`;
+}
+main.innerHTML = html;
+
+function pick(id, k){ answers[id] = k; save(); }
+function customInput(id, v){ if (v.trim()) answers[id+"_custom"] = v; else delete answers[id+"_custom"]; save(); }
+
+/* ================== ПРОГРЕСС ================== */
+function refresh(){
+  let done = 0;
+  for (const q of QUESTIONS){
+    const has = !!answers[q.id];
+    const el = document.getElementById("q"+q.n);
+    if (el) el.classList.toggle("done", has);
+    const bdg = document.getElementById("bdg"+q.n);
+    if (bdg){ bdg.textContent = has ? answers[q.id] : "—"; bdg.className = "qbadge"+(has?" ok":""); }
+    for (const [k] of q.opts){
+      const o = document.getElementById("o_"+q.id+"_"+k);
+      if (o) o.classList.toggle("sel", answers[q.id]===k);
+      const inp = o && o.querySelector("input");
+      if (inp) inp.checked = answers[q.id]===k;
+    }
+    if (has) done++;
+  }
+  document.getElementById("cnt").textContent = done;
+  document.getElementById("bari").style.width = (done/QUESTIONS.length*100)+"%";
+}
+refresh();
+
+/* часы */
+setInterval(()=>{ document.getElementById("clock").textContent = new Date().toLocaleTimeString("ru-RU"); },1000);
+
+/* ================== ДЕЙСТВИЯ ================== */
+function toast(msg, ms=3400){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), ms);
+}
+function fillStars(){
+  for (const q of QUESTIONS) if (!answers[q.id]) answers[q.id] = q.star;
+  save(); toast("Все пустые вопросы заполнены рекомендациями ✶ — проверь и отправь!");
+  document.getElementById("main").scrollIntoView();
+}
+function shortLine(){
+  return QUESTIONS.map(q=>{
+    const c = (answers[q.id+"_custom"]||"").trim();
+    return q.n + (answers[q.id]||"—") + (c?`(${c.slice(0,40)})`:"");
+  }).join(" ");
+}
+async function copyShort(){
+  const s = "SUBSISTENCE v3: " + shortLine();
+  try { await navigator.clipboard.writeText(s); toast("Скопировано — вставь в чат"); }
+  catch(e){
+    const ta = document.createElement("textarea"); ta.value = s; document.body.appendChild(ta);
+    ta.select(); document.execCommand("copy"); ta.remove(); toast("Скопировано — вставь в чат");
+  }
+}
+function downloadJson(){
+  const payload = { version:"v3", title:"SUBSISTENCE — 40 вопросов от новой ИИ", when:new Date().toISOString(),
+    answered:QUESTIONS.filter(q=>answers[q.id]).length, total:QUESTIONS.length, answers };
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}));
+  a.download = "subsistence_answers_v3.json"; a.click();
+}
+async function submitAnswers(){
+  const payload = { version:"v3", title:"SUBSISTENCE — 40 вопросов от новой ИИ", when:new Date().toISOString(),
+    answered:QUESTIONS.filter(q=>answers[q.id]).length, total:QUESTIONS.length, answers,
+    compact:shortLine() };
+  const done = payload.answered;
+  if (done===0){ toast("Сначала ответь хотя бы на пару вопросов :)"); return; }
+  try {
+    const r = await fetch("api/answers", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload)});
+    if (!r.ok) throw new Error("HTTP "+r.status);
+    const j = await r.json();
+    toast(`Ушло! ${done}/40 ответов у ИИ в песочнице ✔${j.file?" ("+j.file+")":""}`, 5000);
+  } catch(e){
+    toast("Сервер не отвечает (страница открыта без сервера?) — жми «Скачать JSON» и кинь файл в чат", 6000);
+  }
+}
+function resetAll(){
+  if (!confirm("Сбросить все ответы опросника?")) return;
+  answers = {}; localStorage.removeItem(LS_KEY); refresh(); toast("Сброшено");
+}
+</script>
+</body>
+</html>

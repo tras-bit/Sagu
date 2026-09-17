@@ -6,14 +6,16 @@ SUBSISTENCE — hp_pipeline.py · хай-поли пасс одной модел
 Выход: Assets/Subsistence/ModelsHP/<model>/<model>_hp.fbx      игровая сетка (LP)
        Assets/Subsistence/ModelsHP/<model>/<model>_lod1.fbx    LOD 55% (12а)
        Assets/Subsistence/ModelsHP/<model>/<model>_lod2.fbx    LOD 25% (12а)
-       Assets/Subsistence/ModelsHP/<model>/<model>_normal.png  запечённые нормали (Tangent, 2K/1K — 11а)
-       Assets/Subsistence/ModelsHP/<model>/<model>_ao.png      запечённый Ambient Occlusion
-       docs/previews/_hp_<model>.png                           лист сравнения HP ↔ LP+baked
+       Assets/Subsistence/ModelsHP/<model>/<model>_color.png   albedo 2K/1K (запечённый цвет)
+       Assets/Subsistence/ModelsHP/<model>/<model>_normal.png  нормали Tangent 2K/1K
+       Assets/Subsistence/ModelsHP/<model>/<model>_ao.png      Ambient Occlusion
+       docs/previews/_hp_<model>.png                           сравнение: LP+текстуры ↔ HP+текстуры
 
-Использование (окружение должно быть поднято: bash tools/setup_blender.sh):
+Использование (окружение: bash tools/setup_blender.sh):
     python3 tools/bpy_run.py tools/blender/hp_pipeline.py -- --model MN_smiler --size 2048 --subdiv 3
 """
 import bpy, os, sys
+import mathutils
 
 argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 def opt(name, default):
@@ -23,6 +25,7 @@ MODEL    = opt("--model", "MN_smiler")
 SIZE     = int(opt("--size", 2048))          # 11а: 2K крупные, 1K мелочь
 SUBDIV   = int(opt("--subdiv", 3))           # глубина субдивизии HP
 STRENGTH = float(opt("--strength", 0.022))   # сила органической детализации (метры)
+SAMPLES  = int(opt("--samples", 32))         # сэмплы финального рендера (сравнение)
 
 ROOT   = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUTDIR = os.path.join(ROOT, "Assets", "Subsistence", "ModelsHP", MODEL)
@@ -48,7 +51,17 @@ for o in meshes:                      # отвязать от пустышек-�
         mwl = o.matrix_world.copy()
         o.parent = None
         o.matrix_world = mwl
+meshes = [o for o in bpy.context.scene.objects if o.type == "MESH"]
 lp = max(meshes, key=lambda o: len(o.data.vertices))
+if len(meshes) > 1:                   # несколько мешей → объединить в один
+    bpy.ops.object.select_all(action="DESELECT")
+    for o in meshes:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = lp
+    bpy.ops.object.join()
+    meshes = [o for o in bpy.context.scene.objects if o.type == "MESH"]
+    lp = meshes[0]
+    print(f"[hp] мешей было несколько — объединены в {lp.name}")
 lp_tris = sum(len(p.vertices) - 2 for p in lp.data.polygons)
 print(f"[hp] LP: {lp.name} · {len(lp.data.vertices)} вершин · {lp_tris} трис")
 
@@ -81,40 +94,47 @@ def displace(name, tex_name, kind, scale, strength, **kw):
     d.mid_level = 0.5
     return d
 
-displace("hp_skin",  "hp_skin_tex",  "CLOUDS", 0.32, STRENGTH)                      # крупные неровности плоти
+displace("hp_skin",  "hp_skin_tex",  "CLOUDS", 0.32, STRENGTH)                       # крупные неровности плоти
 displace("hp_micro", "hp_micro_tex", "STUCCI", 1.7, STRENGTH * 0.45, stucci_type="PLASTIC")  # микрорельеф
 displace("hp_pores", "hp_pores_tex", "VORONOI", 6.5, -STRENGTH * 0.30)              # поры-вмятины
 
 dg = bpy.context.evaluated_depsgraph_get()
 hp_eval = hp.evaluated_get(dg)
-hp_tris = 0
-for me_chunk in (hp_eval.to_mesh(),):
-    hp_tris = sum(len(p.vertices) - 2 for p in me_chunk.polygons)
-    hp_eval.to_mesh_clear()
+me_tmp = hp_eval.to_mesh()
+hp_tris = sum(len(p.vertices) - 2 for p in me_tmp.polygons)
+hp_eval.to_mesh_clear()
 print(f"[hp] HP: ~{hp_tris} трис (субдивизия ×{SUBDIV} + дисплейс)")
 
-# ---------- 5. материал LP под запекание ----------
+# ---------- 5. материал LP с картами под запекание ----------
 mat = bpy.data.materials.new(MODEL + "_HP_baked")
 mat.use_nodes = True
 nt = mat.node_tree
 bsdf = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
 bsdf.inputs["Roughness"].default_value = 0.85
 
-img_n = bpy.data.images.new(MODEL + "_normal", SIZE, SIZE, float_buffer=True)
-img_a = bpy.data.images.new(MODEL + "_ao", SIZE, SIZE, float_buffer=True)
-node_n = nt.nodes.new("ShaderNodeTexImage"); node_n.image = img_n; node_n.location = (-500, 260)
+img_c = bpy.data.images.new(MODEL + "_color", SIZE, SIZE)            # albedo, sRGB
+img_n = bpy.data.images.new(MODEL + "_normal", SIZE, SIZE)           # tangent, Non-Color
+img_a = bpy.data.images.new(MODEL + "_ao", max(SIZE // 2, 512)) if False else bpy.data.images.new(MODEL + "_ao", max(SIZE // 2, 512), max(SIZE // 2, 512))  # AO — половинное разрешение (низкочастотная карта)
+
+node_c = nt.nodes.new("ShaderNodeTexImage"); node_c.image = img_c; node_c.location = (-700, 420)
+node_n = nt.nodes.new("ShaderNodeTexImage"); node_n.image = img_n; node_n.location = (-700, 160)
 node_n.image.colorspace_settings.name = "Non-Color"
-node_a = nt.nodes.new("ShaderNodeTexImage"); node_a.image = img_a; node_a.location = (-500, 20)
+node_a = nt.nodes.new("ShaderNodeTexImage"); node_a.image = img_a; node_a.location = (-700, -80)
 node_a.image.colorspace_settings.name = "Non-Color"
-nmap = nt.nodes.new("ShaderNodeNormalMap"); nmap.location = (-220, 140)
+nmap = nt.nodes.new("ShaderNodeNormalMap"); nmap.location = (-300, 60)
+mult = nt.nodes.new("ShaderNodeMixRGB"); mult.location = (-300, 300)
+mult.blend_type = "MULTIPLY"; mult.inputs[0].default_value = 1.0
+
+nt.links.new(node_c.outputs[0], mult.inputs[1])
+nt.links.new(node_a.outputs[0], mult.inputs[2])
+nt.links.new(mult.outputs[0], bsdf.inputs["Base Color"])
 nt.links.new(node_n.outputs[0], nmap.inputs[1])
 nt.links.new(nmap.outputs[0], bsdf.inputs["Normal"])
-nt.links.new(node_a.outputs[0], bsdf.inputs["Base Color"])
 
 lp.data.materials.clear()
 lp.data.materials.append(mat)
 
-# ---------- 6. запекание ----------
+# ---------- 6. запекание: нормали → AO → цвет ----------
 sc = bpy.context.scene
 sc.render.engine = "CYCLES"
 sc.cycles.device = "CPU"
@@ -140,11 +160,22 @@ bpy.ops.object.bake(type="AO", use_selected_to_active=True, use_clear=True,
                     margin=16, cage_extrusion=CAGE)
 print("[hp] AO запечён")
 
-for img, fname in ((img_n, f"{MODEL}_normal.png"), (img_a, f"{MODEL}_ao.png")):
+nt.nodes.active = node_c
+select_for_bake(lp, [hp])
+sc.render.bake.use_pass_direct = False
+sc.render.bake.use_pass_indirect = False
+sc.render.bake.use_pass_color = True
+bpy.ops.object.bake(type="DIFFUSE", use_selected_to_active=True, use_clear=True,
+                    margin=16, cage_extrusion=CAGE)
+sc.render.bake.use_pass_direct = True
+sc.render.bake.use_pass_indirect = True
+print("[hp] albedo (цвет) запечён")
+
+for img, fname in ((img_c, f"{MODEL}_color.png"), (img_n, f"{MODEL}_normal.png"), (img_a, f"{MODEL}_ao.png")):
     img.filepath_raw = os.path.join(OUTDIR, fname)
     img.file_format = "PNG"
     img.save()
-print(f"[hp] карты сохранены: {OUTDIR}/{MODEL}_normal.png, _ao.png")
+print(f"[hp] карты: {MODEL}_color/_normal/_ao.png ({SIZE}px) → {OUTDIR}")
 
 # ---------- 7. LOD-ы (12а) ----------
 def make_lod(src_obj, name, ratio):
@@ -163,7 +194,7 @@ def make_lod(src_obj, name, ratio):
 lod1 = make_lod(lp, MODEL + "_LOD1", 0.55)
 lod2 = make_lod(lp, MODEL + "_LOD2", 0.25)
 
-# ---------- 8. экспорт FBX ----------
+# ---------- 8. экспорт FBX (LP + LOD) ----------
 def export(obj, fname):
     bpy.ops.object.select_all(action="DESELECT")
     obj.select_set(True)
@@ -174,27 +205,30 @@ def export(obj, fname):
 export(lp, f"{MODEL}_hp.fbx")
 export(lod1, f"{MODEL}_lod1.fbx")
 export(lod2, f"{MODEL}_lod2.fbx")
-print("[hp] FBX экспортированы: _hp, _lod1, _lod2")
+print("[hp] FBX: _hp, _lod1, _lod2")
 
-# ---------- 9. лист сравнения HP ↔ LP+baked ----------
+# ---------- 9. лист сравнения: обе версии С ТЕКСТУРАМИ ----------
 for o in (lp, lod1, lod2, hp):
     o.hide_render = o.hide_viewport = False
-lp.location.x -= 1.1
-hp.location.x += 1.1
+# HP оставляем с оригинальными материалами (цвета из исходного FBX)
+# LP уже с albedo×AO + нормалями
 
-grey = bpy.data.materials.new(MODEL + "_grey")
-grey.use_nodes = True
-gb = next(n for n in grey.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
-gb.inputs["Roughness"].default_value = 0.85
-hp.data.materials.clear()
-hp.data.materials.append(grey)
+# расставить по размеру модели
+bb = lp.matrix_world @ mathutils.Vector(lp.data.vertices[0].co)  # init
+world_coords = [lp.matrix_world @ mathutils.Vector(v.co) for v in lp.data.vertices[:400]]
+xs = [v.x for v in world_coords]; zs = [v.z for v in world_coords]
+size = max(max(xs) - min(xs), max(zs) - min(zs), 0.5)
+cy = (max(zs) + min(zs)) / 2
+off = size * 0.62
+lp.location.x -= off
+hp.location.x += off
+cam_dist = size * 2.6
 
 cam_data = bpy.data.cameras.new("Cam"); cam_data.lens = 50
 cam = bpy.data.objects.new("Cam", cam_data)
 bpy.context.collection.objects.link(cam)
-import mathutils
-cam.location = (0, -5.4, 1.15)
-target = mathutils.Vector((0, 0, 0.95))
+cam.location = (0, -cam_dist, cy + size * 0.12)
+target = mathutils.Vector((0, 0, cy))
 cam.rotation_euler = (target - cam.location).to_track_quat("-Z", "Y").to_euler()
 
 sun_data = bpy.data.lights.new("Sun", "SUN"); sun_data.energy = 3.2
@@ -208,11 +242,11 @@ world.node_tree.nodes["Background"].inputs[0].default_value = (0.05, 0.05, 0.06,
 world.node_tree.nodes["Background"].inputs[1].default_value = 0.6
 sc.world = world
 sc.camera = cam
-sc.cycles.samples = 48
-sc.render.resolution_x = 1280
-sc.render.resolution_y = 720
+sc.cycles.samples = SAMPLES
+sc.render.resolution_x = 960
+sc.render.resolution_y = 540
 sc.render.filepath = os.path.join(ROOT, "docs", "previews", f"_hp_{MODEL}.png")
 bpy.ops.render.render(write_still=True)
-print(f"[hp] лист сравнения: {sc.render.filepath}")
+print(f"[hp] лист сравнения (с текстурами): {sc.render.filepath}")
 
-print(f"[hp] ГОТОВО · {MODEL}: LP {lp_tris} трис + HP {hp_tris} трис + нормаль/AO {SIZE}px + 2 LOD")
+print(f"[hp] ГОТОВО · {MODEL}: LP {lp_tris} трис + HP {hp_tris} трис + color/normal/AO {SIZE}px + 2 LOD")

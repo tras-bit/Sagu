@@ -2,6 +2,10 @@
 """
 SUBSISTENCE — hp_pipeline.py · хай-поли пасс одной модели (AAA-пайплайн, ANSWERS_V3 8а).
 
+Профили (авто по префиксу, перекрывается --kind):
+  · organic (MN_*, CH_*) — субдивизия + органический дисплейс (плоть, поры)
+  · hard    (W_*, EX_*, остальное) — фаски на кромках (bevel) + микроцарапины + вмятины
+
 Вход:  игровой FBX   Assets/Subsistence/Models/<cat>/<model>.fbx
 Выход: Assets/Subsistence/ModelsHP/<model>/<model>_hp.fbx      игровая сетка (LP)
        Assets/Subsistence/ModelsHP/<model>/<model>_lod1.fbx    LOD 55% (12а)
@@ -23,9 +27,12 @@ def opt(name, default):
 
 MODEL    = opt("--model", "MN_smiler")
 SIZE     = int(opt("--size", 2048))          # 11а: 2K крупные, 1K мелочь
-SUBDIV   = int(opt("--subdiv", 3))           # глубина субдивизии HP
+SUBDIV   = int(opt("--subdiv", 3))           # глубина субдивизии HP (органика)
 STRENGTH = float(opt("--strength", 0.022))   # сила органической детализации (метры)
 SAMPLES  = int(opt("--samples", 32))         # сэмплы финального рендера (сравнение)
+KIND     = opt("--kind", "")                 # organic | hard (пусто = авто по префиксу)
+if not KIND:
+    KIND = "organic" if MODEL.startswith(("MN_", "CH_")) else "hard"
 
 ROOT   = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUTDIR = os.path.join(ROOT, "Assets", "Subsistence", "ModelsHP", MODEL)
@@ -72,15 +79,13 @@ if not lp.data.uv_layers:
     bpy.ops.uv.smart_project(angle_limit=1.15, island_margin=0.02)
     print("[hp] UV не было — smart_project готов")
 
-# ---------- 4. HP-копия: субдивизия + органический дисплейс ----------
+# ---------- 4. HP-копия (профиль organic / hard) ----------
 hp = lp.copy()
 hp.data = lp.data.copy()
 hp.name = MODEL + "_HP"
 bpy.context.collection.objects.link(hp)
 
-sub = hp.modifiers.new("hp_sub", "SUBSURF")
-sub.levels = SUBDIV
-sub.subdivision_type = "SIMPLE"
+REF = max(lp.dimensions) if max(lp.dimensions) > 0.01 else 1.0   # габарит модели, м
 
 def displace(name, tex_name, kind, scale, strength, **kw):
     t = bpy.data.textures.new(tex_name, kind)
@@ -94,16 +99,33 @@ def displace(name, tex_name, kind, scale, strength, **kw):
     d.mid_level = 0.5
     return d
 
-displace("hp_skin",  "hp_skin_tex",  "CLOUDS", 0.32, STRENGTH)                       # крупные неровности плоти
-displace("hp_micro", "hp_micro_tex", "STUCCI", 1.7, STRENGTH * 0.45, stucci_type="PLASTIC")  # микрорельеф
-displace("hp_pores", "hp_pores_tex", "VORONOI", 6.5, -STRENGTH * 0.30)              # поры-вмятины
+if KIND == "organic":
+    # плоть: субдивизия + неровности + микрорельеф + поры
+    sub = hp.modifiers.new("hp_sub", "SUBSURF")
+    sub.levels = SUBDIV
+    sub.subdivision_type = "SIMPLE"
+    displace("hp_skin",  "hp_skin_tex",  "CLOUDS", 0.32, STRENGTH)                       # крупные неровности плоти
+    displace("hp_micro", "hp_micro_tex", "STUCCI", 1.7, STRENGTH * 0.45, stucci_type="PLASTIC")  # микрорельеф
+    displace("hp_pores", "hp_pores_tex", "VORONOI", 6.5, -STRENGTH * 0.30)              # поры-вмятины
+    hp_note = f"субдивизия ×{SUBDIV} + органика"
+else:
+    # хард-сёрфейс: фаски на кромках (bevel) + микроцарапины + мелкие вмятины
+    bv = hp.modifiers.new("hp_bevel", "BEVEL")
+    bv.limit_method = "ANGLE"
+    bv.angle_limit = 0.70            # ~40°
+    bv.segments = 3
+    bv.width = max(REF * 0.0022, 0.0003)
+    displace("hp_scratch", "hp_scratch_tex", "STUCCI", 4.5, 0.0012, stucci_type="PLASTIC")  # микроцарапины
+    displace("hp_dents",  "hp_dents_tex",  "VORONOI", 12.0, -0.0005)                        # мелкие вмятины
+    hp_note = f"фаски {bv.width*1000:.2f} мм + царапины"
+print(f"[hp] профиль: {KIND} ({hp_note})")
 
 dg = bpy.context.evaluated_depsgraph_get()
 hp_eval = hp.evaluated_get(dg)
 me_tmp = hp_eval.to_mesh()
 hp_tris = sum(len(p.vertices) - 2 for p in me_tmp.polygons)
 hp_eval.to_mesh_clear()
-print(f"[hp] HP: ~{hp_tris} трис (субдивизия ×{SUBDIV} + дисплейс)")
+print(f"[hp] HP: ~{hp_tris} трис ({hp_note})")
 
 # ---------- 5. материал LP с картами под запекание ----------
 mat = bpy.data.materials.new(MODEL + "_HP_baked")

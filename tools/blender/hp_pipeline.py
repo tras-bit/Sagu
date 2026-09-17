@@ -23,7 +23,9 @@ import mathutils
 
 argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 def opt(name, default):
-    return argv[argv.index(name) + 1] if name in argv else default
+    """Последнее вхождение побеждает (перекрытие дефолтов батча)."""
+    vals = [argv[i + 1] for i, a in enumerate(argv) if a == name and i + 1 < len(argv)]
+    return vals[-1] if vals else default
 
 MODEL    = opt("--model", "MN_smiler")
 SIZE     = int(opt("--size", 2048))          # 11а: 2K крупные, 1K мелочь

@@ -333,7 +333,7 @@ namespace Subsistence.Progression
             if (_sel < 0 || _sel >= skins.Count) return;
             var s = skins[_sel];
 
-            var tex = Resources.Load<Texture2D>("skins/" + s.id.Replace('.', '_'));
+            var tex = Resources.Load<Texture2D>("skins/" + s.id);   // файлы skins/hazmat.clean.png — с точками
             _preview.texture = tex;
             _preview.color = tex != null ? Color.white : new Color(1f, 1f, 1f, 0.05f);
 

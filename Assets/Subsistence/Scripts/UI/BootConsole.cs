@@ -2,8 +2,9 @@
 //  SUBSISTENCE — UI/BootConsole.cs
 //  Системная консоль в стиле BACKROOMS OPERATING SYSTEM (как на референсе):
 //   • шапка:  C:\SUBSISTENCESYSTEM> BACKROOMS OPERATING SYSTEM v2.0 CONSOLE [MIRROR: 7777]
-//   • слева:  меню из 9 пунктов [1] ИГРАТЬ … [9] ВЫХОД (ровно как на макете)
-//   • справа: лог с ASCII-логотипом SUBSISTENCE и системными сообщениями
+//   • главное меню — обычное игровое: логотип SUBSISTENCE, крупные кнопки (1–5),
+//     персонаж-хазмат справа, панель «СЕТЕВАЯ ИГРА» с полем IP
+//   • на время загрузки лог разворачивается на весь экран (BIOS-стиль с ASCII-лого)
 //   • снизу:  строка ввода  C:\SUBSISTENCE> _  + подсказки TAB/↑/CTRL+C/ENTER
 //  Команды: PLAY HOST JOIN <ip> MAP SYSINFO SETTINGS HELP CLS EXIT (+ SEED <n>)
 //  Опросник проекта (40 вопросов) в игре не нужен — он живёт отдельно:
@@ -163,7 +164,13 @@ namespace Subsistence.UI
         RectTransform _root;
         Text _log, _headerLeft, _headerRight, _input, _hintLeft;
         RectTransform _caret;
-        readonly List<Text> _menuLabels = new List<Text>();
+
+        // ---- главное меню (обычное кнопочное, вместо терминального бокового)
+        RectTransform _menuRoot;          // логотип + кнопки + фон-персонаж; скрывается на время загрузки
+        RectTransform _netPanel;          // модалка «СЕТЕВАЯ ИГРА» (хост/подключение)
+        UnityEngine.UI.InputField _ipField;
+        RectTransform _promptBar, _hintBar;
+        bool _bootMode;                   // true = идёт загрузка: лог развёрнут на весь экран
 
         // ------------------------------------------------------------- печать
         readonly List<string> _lines = new List<string>(256);
@@ -177,18 +184,14 @@ namespace Subsistence.UI
         int _histIdx;
         float _caretTimer, _clock;
 
-        /// <summary>Меню строго по макету: 9 пунктов, клавиши 1…9.</summary>
+        /// <summary>Главное меню: 5 крупных кнопок, клавиши 1–5. Терминальные команды работают в строке внизу.</summary>
         static readonly string[,] Menu =
         {
-            { "1", "ИГРАТЬ (PLAY)",              "PLAY"     },
-            { "2", "СОЗДАТЬ СЕРВЕР (HOST)",      "HOST"     },
-            { "3", "ПОДКЛЮЧИТЬСЯ (JOIN)",        "JOIN"     },
-            { "4", "КАРТА УРОВНЕЙ (MAP)",        "MAP"      },
-            { "5", "О СИСТЕМЕ (SYSINFO)",        "SYSINFO"  },
-            { "6", "НАСТРОЙКИ (SETTINGS)",       "SETTINGS" },
-            { "7", "ПОМОЩЬ (HELP)",              "HELP"     },
-            { "8", "ОЧИСТИТЬ (CLS)",             "CLS"      },
-            { "9", "ВЫХОД (QUIT)",               "EXIT"     },
+            { "1", "НОВАЯ ИГРА",       "PLAY"     },
+            { "2", "СЕТЕВАЯ ИГРА",     "NETWORK"  },
+            { "3", "НАСТРОЙКИ",        "SETTINGS" },
+            { "4", "СПРАВКА",          "HELP"     },
+            { "5", "ВЫХОД",            "EXIT"     },
         };
 
         static readonly string[] Logo = new string[]
@@ -227,6 +230,15 @@ namespace Subsistence.UI
         // ------------------------------------------------------------- сборка UI
         void BuildUI()
         {
+            // Кнопки/поля работают мышью только при живом EventSystem — создаём, если нет
+            if (UnityEngine.EventSystems.EventSystem.current == null)
+            {
+                var es = new GameObject("EventSystem",
+                                        typeof(UnityEngine.EventSystems.EventSystem),
+                                        typeof(UnityEngine.EventSystems.StandaloneInputModule));
+                DontDestroyOnLoad(es);
+            }
+
             _canvas = UIStyle.CreateCanvas("SystemConsoleCanvas", 200, out _);
             _root = UIStyle.Panel(_canvas.transform, "Root", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, UIStyle.PanelBg);
 
@@ -239,66 +251,192 @@ namespace Subsistence.UI
             _headerRight = UIStyle.Label(hdr, "", 16, UIStyle.TermGreenDim, TextAnchor.MiddleRight);
             _headerRight.rectTransform.offsetMin = new Vector2(900, 0);
 
-            // БОКОВОЕ МЕНЮ ----------------------------------------------------
-            var side = UIStyle.Panel(_root, "Side", new Vector2(0, 0), new Vector2(0, 1),
-                                     new Vector2(0, 44), new Vector2(340, -38), new Color(0.012f, 0.06f, 0.034f, 1f));
-            UIStyle.Panel(_root, "SideSep", new Vector2(0, 0), new Vector2(0, 1),
-                          new Vector2(340, 44), new Vector2(341, -38), UIStyle.TermGreenDark);
+            // ГЛАВНОЕ МЕНЮ -----------------------------------------------------
+            // Обычное игровое меню: слева логотип и крупные кнопки, справа персонаж,
+            // внизу — строка команд (SEED/HOST/JOIN/ip… работают как раньше).
+            _menuRoot = UIStyle.Panel(_root, "MainMenu", Vector2.zero, Vector2.one,
+                                      Vector2.zero, Vector2.zero, new Color(0, 0, 0, 0));
 
-            _menuLabels.Clear();
+            // фон: рендер персонажа (скин из Resources/skins, прозрачный фон) у правого края
+            var charTex = Resources.Load<Texture2D>("skins/hazmat.clean");
+            if (charTex != null)
+            {
+                var bgGo = new GameObject("MenuCharacter", typeof(RawImage));
+                bgGo.transform.SetParent(_menuRoot, false);
+                var brt = bgGo.GetComponent<RectTransform>();
+                brt.anchorMin = new Vector2(1, 0); brt.anchorMax = new Vector2(1, 1);
+                brt.offsetMin = new Vector2(-880, -40); brt.offsetMax = new Vector2(20, 40);
+                var bg = bgGo.GetComponent<RawImage>();
+                bg.texture = charTex;
+                bg.color = new Color(1f, 1f, 1f, 0.88f);
+                // квадратная текстура в неквадратной зоне: кроп по uvRect, чтобы персонаж не растягивался
+                float areaAspect = 880f / 1120f;                       // 880×(1080+40)
+                bg.uvRect = new Rect((1f - areaAspect) * 0.5f, 0f, areaAspect, 1f);
+            }
+            // затемнение под кнопками, чтобы текст читался на любом фоне
+            UIStyle.Panel(_menuRoot, "ShadeSolid", new Vector2(0, 0), new Vector2(0.58f, 1),
+                          Vector2.zero, Vector2.zero, new Color(0.012f, 0.024f, 0.018f, 0.985f));
+            UIStyle.Panel(_menuRoot, "ShadeFade", new Vector2(0.58f, 0), new Vector2(0.78f, 1),
+                          Vector2.zero, Vector2.zero, new Color(0.012f, 0.024f, 0.018f, 0.62f));
+            UIStyle.Panel(_menuRoot, "TopLine", new Vector2(0, 1), new Vector2(1, 1),
+                          new Vector2(0, -40), new Vector2(0, -38), UIStyle.TermGreenDark);
+            UIStyle.Panel(_menuRoot, "BottomLine", new Vector2(0, 0), new Vector2(1, 0),
+                          new Vector2(0, 54), new Vector2(0, 56), UIStyle.TermGreenDark);
+
+            // логотип
+            var title = UIStyle.Label(_menuRoot, "SUBSISTENCE", 88, UIStyle.TermGreenBright, TextAnchor.MiddleLeft);
+            title.fontStyle = FontStyle.Bold;
+            title.rectTransform.anchorMin = new Vector2(0, 1); title.rectTransform.anchorMax = new Vector2(0.6f, 1);
+            title.rectTransform.offsetMin = new Vector2(64, -196); title.rectTransform.offsetMax = new Vector2(0, -92);
+            var tagline = UIStyle.Label(_menuRoot,
+                                        "ВЫЖИВАНИЕ В BACKROOMS · L0 КОРИДОРЫ / L37 БАССЕЙНЫ / L3 ЭЛЕКТРОСТАНЦИЯ",
+                                        19, UIStyle.TermGreenDim, TextAnchor.MiddleLeft);
+            tagline.rectTransform.anchorMin = new Vector2(0, 1); tagline.rectTransform.anchorMax = new Vector2(0.62f, 1);
+            tagline.rectTransform.offsetMin = new Vector2(68, -230); tagline.rectTransform.offsetMax = new Vector2(0, -200);
+
+            // колонка кнопок
             for (int i = 0; i < Menu.GetLength(0); i++)
             {
                 int idx = i;
-                float y = -14 - i * 34;
-                var rowRt = UIStyle.Panel(side, "Row" + i, new Vector2(0, 1), new Vector2(1, 1),
-                                          new Vector2(6, y - 30), new Vector2(-6, y), new Color(0, 0, 0, 0));
-                var label = UIStyle.Label(rowRt, $"[{Menu[i, 0]}] {Menu[i, 1]}", 17, UIStyle.TermGreen, TextAnchor.MiddleLeft);
-                label.rectTransform.offsetMin = new Vector2(10, 0);
-                _menuLabels.Add(label);
-
-                var img = rowRt.gameObject.AddComponent<Image>();
-                img.color = new Color(0, 0, 0, 0.001f);   // прозрачная кнопка поверх строки
-                var btn = rowRt.gameObject.AddComponent<Button>();
-                var colors = btn.colors;
-                colors.normalColor = new Color(1, 1, 1, 0f);
-                colors.highlightedColor = new Color(1, 1, 1, 0.12f);
-                colors.pressedColor = new Color(1, 1, 1, 0.2f);
-                btn.colors = colors;
+                var btn = MenuBtn(_menuRoot, Menu[i, 1], new Vector2(64, -300 - i * 82), new Vector2(460, 66));
                 btn.onClick.AddListener(() => Execute(Menu[idx, 2], null));
             }
+            var menuHint = UIStyle.Label(_menuRoot,
+                                         "клавиши 1–5 · мышь · команды: HOST · JOIN ip:порт · MAP · SYSINFO · SEED 1337 · HELP",
+                                         14, UIStyle.TermGreenDark, TextAnchor.MiddleLeft);
+            menuHint.rectTransform.anchorMin = new Vector2(0, 1); menuHint.rectTransform.anchorMax = new Vector2(0.62f, 1);
+            menuHint.rectTransform.offsetMin = new Vector2(68, -760); menuHint.rectTransform.offsetMax = new Vector2(0, -736);
 
-            var sideHint = UIStyle.Label(side, "Команды: PLAY · HOST · JOIN <ip> · MAP · SYSINFO · SETTINGS · HELP · CLS · EXIT",
-                                         13, UIStyle.TermGreenDark, TextAnchor.LowerLeft);
-            sideHint.rectTransform.offsetMin = new Vector2(14, 10);
-            sideHint.rectTransform.offsetMax = new Vector2(-8, -(Menu.GetLength(0) * 34 + 30));
+            // модалка «СЕТЕВАЯ ИГРА» ------------------------------------------
+            _netPanel = UIStyle.Panel(_menuRoot, "NetPanel", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                                      new Vector2(-340, -286), new Vector2(340, 286), new Color(0.028f, 0.085f, 0.055f, 0.985f));
+            UIStyle.Panel(_netPanel, "Frame", Vector2.zero, Vector2.one, new Vector2(-2, -2), new Vector2(2, 2), UIStyle.TermGreenDark);
+            var netTitle = UIStyle.Label(_netPanel, "СЕТЕВАЯ ИГРА", 36, UIStyle.TermGreenBright, TextAnchor.MiddleLeft);
+            netTitle.fontStyle = FontStyle.Bold;
+            netTitle.rectTransform.anchorMin = new Vector2(0, 1); netTitle.rectTransform.anchorMax = new Vector2(1, 1);
+            netTitle.rectTransform.offsetMin = new Vector2(30, -66); netTitle.rectTransform.offsetMax = new Vector2(-20, -18);
+            var hostBtn = MenuBtn(_netPanel, "СОЗДАТЬ СЕРВЕР   (ПОРТ 7777)", new Vector2(30, -100), new Vector2(620, 62));
+            hostBtn.onClick.AddListener(() => Execute("HOST", null));
+            var ipLabel = UIStyle.Label(_netPanel, "АДРЕС ХОСТА  (IP:ПОРТ)", 15, UIStyle.TermGreenDim, TextAnchor.MiddleLeft);
+            ipLabel.rectTransform.anchorMin = new Vector2(0, 1); ipLabel.rectTransform.anchorMax = new Vector2(1, 1);
+            ipLabel.rectTransform.offsetMin = new Vector2(32, -196); ipLabel.rectTransform.offsetMax = new Vector2(-20, -172);
+
+            var ifGo = new GameObject("IPField", typeof(RectTransform), typeof(Image), typeof(InputField));
+            ifGo.transform.SetParent(_netPanel, false);
+            var ifRt = ifGo.GetComponent<RectTransform>();
+            ifRt.anchorMin = new Vector2(0, 1); ifRt.anchorMax = new Vector2(1, 1);
+            ifRt.offsetMin = new Vector2(30, -252); ifRt.offsetMax = new Vector2(-30, -198);
+            ifGo.GetComponent<Image>().color = new Color(0.008f, 0.035f, 0.022f, 1f);
+            var ipText = UIStyle.Label(ifGo.transform, "", 24, new Color(0.92f, 1f, 0.95f, 1f), TextAnchor.MiddleLeft);
+            ipText.rectTransform.offsetMin = new Vector2(14, 2); ipText.rectTransform.offsetMax = new Vector2(-10, -2);
+            var ipPh = UIStyle.Label(ifGo.transform, "192.168.1.5:7777", 24, UIStyle.TermGreenDark, TextAnchor.MiddleLeft);
+            ipPh.rectTransform.offsetMin = new Vector2(14, 2); ipPh.rectTransform.offsetMax = new Vector2(-10, -2);
+            _ipField = ifGo.GetComponent<InputField>();
+            _ipField.textComponent = ipText;
+            _ipField.placeholder = ipPh;
+            _ipField.text = "";
+            var joinBtn = MenuBtn(_netPanel, "ПОДКЛЮЧИТЬСЯ", new Vector2(30, -286), new Vector2(620, 62));
+            joinBtn.onClick.AddListener(() =>
+                Execute("JOIN", string.IsNullOrEmpty(_ipField.text) ? null : _ipField.text.Trim()));
+            var netHint = UIStyle.Label(_netPanel,
+                "как играть: у одного «СОЗДАТЬ СЕРВЕР», у остальных — его IP (у хоста: ipconfig). ENTER в поле = подключиться, ESC = закрыть.\n" +
+                "Mirror включается в редакторе: меню Subsistence → 3, затем → 11. Выделенный сервер: Subsistence.exe -batchmode -nographics -server",
+                14, UIStyle.TermGreenDark, TextAnchor.UpperLeft);
+            netHint.rectTransform.anchorMin = new Vector2(0, 1); netHint.rectTransform.anchorMax = new Vector2(1, 1);
+            netHint.rectTransform.offsetMin = new Vector2(32, -420); netHint.rectTransform.offsetMax = new Vector2(-28, -362);
+            var backBtn = MenuBtn(_netPanel, "НАЗАД", new Vector2(30, -442), new Vector2(620, 54));
+            backBtn.onClick.AddListener(() => _netPanel.gameObject.SetActive(false));
+            _netPanel.gameObject.SetActive(false);
 
             // ЛОГ -------------------------------------------------------------
-            _log = UIStyle.Label(_root, "", 16, UIStyle.TermGreen, TextAnchor.UpperLeft);
-            _log.rectTransform.anchorMin = new Vector2(0, 0); _log.rectTransform.anchorMax = new Vector2(1, 1);
-            _log.rectTransform.offsetMin = new Vector2(356, 78); _log.rectTransform.offsetMax = new Vector2(-16, -46);
+            // В меню — компактная область справа-снизу (команды SYSINFO/HELP печатают туда),
+            // на время загрузки разворачивается на весь экран (EnterBootMode).
+            UIStyle.Panel(_menuRoot, "LogPlate", new Vector2(0.585f, 0), new Vector2(1, 0.38f),
+                          new Vector2(0, 58), new Vector2(0, 0), new Color(0.008f, 0.02f, 0.014f, 0.72f));
+            _log = UIStyle.Label(_root, "", 15, UIStyle.TermGreen, TextAnchor.UpperLeft);
+            _log.rectTransform.anchorMin = new Vector2(0.60f, 0); _log.rectTransform.anchorMax = new Vector2(1f, 0.38f);
+            _log.rectTransform.offsetMin = new Vector2(14, 64); _log.rectTransform.offsetMax = new Vector2(-18, -6);
             _log.lineSpacing = 1.05f;
             _log.verticalOverflow = VerticalWrapMode.Truncate;
 
             // СТРОКА ВВОДА ----------------------------------------------------
-            var prompt = UIStyle.Panel(_root, "Prompt", new Vector2(0, 0), new Vector2(1, 0),
+            _promptBar = UIStyle.Panel(_root, "Prompt", new Vector2(0, 0), new Vector2(1, 0),
                                        new Vector2(0, 22), new Vector2(0, 52), UIStyle.PanelBgDeep);
-            var ps1 = UIStyle.Label(prompt, "C:\\SUBSISTENCE>", 17, UIStyle.TermGreenBright, TextAnchor.MiddleLeft);
+            var ps1 = UIStyle.Label(_promptBar, "C:\\SUBSISTENCE>", 17, UIStyle.TermGreenBright, TextAnchor.MiddleLeft);
             ps1.rectTransform.offsetMax = new Vector2(-1000, -2);
-            _input = UIStyle.Label(prompt, "", 17, UIStyle.TermGreen, TextAnchor.MiddleLeft);
+            _input = UIStyle.Label(_promptBar, "", 17, UIStyle.TermGreen, TextAnchor.MiddleLeft);
             _input.rectTransform.offsetMin = new Vector2(246, 0);
             _input.rectTransform.offsetMax = new Vector2(-16, 0);
-            _caret = UIStyle.Panel(prompt, "Caret", new Vector2(0, 0.5f), new Vector2(0, 0.5f),
+            _caret = UIStyle.Panel(_promptBar, "Caret", new Vector2(0, 0.5f), new Vector2(0, 0.5f),
                                    new Vector2(246, -9), new Vector2(255, 9), UIStyle.TermGreen);
 
             // ПОДСКАЗКИ -------------------------------------------------------
-            var hint = UIStyle.Panel(_root, "Hint", new Vector2(0, 0), new Vector2(1, 0),
+            _hintBar = UIStyle.Panel(_root, "Hint", new Vector2(0, 0), new Vector2(1, 0),
                                      new Vector2(0, 0), new Vector2(0, 22), new Color(0.008f, 0.04f, 0.024f, 1f));
-            _hintLeft = UIStyle.Label(hint, "> СИСТЕМА ГОТОВА. ВЫБЕРИ КОМАНДУ ИЛИ НАЖМИ ЕЁ НОМЕР",
+            _hintLeft = UIStyle.Label(_hintBar, "> ВЫБЕРИ ПУНКТ МЕНЮ (КЛАВИШИ 1–5 ИЛИ МЫШЬ) · ПОЛНЫЙ СПИСОК КОМАНД — HELP",
                                       14, UIStyle.TermGreenDim, TextAnchor.MiddleLeft);
             _hintLeft.rectTransform.offsetMax = new Vector2(-640, 0);
-            var hintRight = UIStyle.Label(hint, "TAB — автодополнение   ↑ ↓ — история   CTRL+C — выход   ENTER — выполнить",
+            var hintRight = UIStyle.Label(_hintBar, "TAB — автодополнение   ↑ ↓ — история   CTRL+C — выход   ENTER — выполнить",
                                           14, UIStyle.TermGreenDim, TextAnchor.MiddleRight);
             hintRight.rectTransform.offsetMin = new Vector2(700, 0);
+        }
+
+        /// <summary>Кнопка главного меню: тонкая рамка, тёмная плашка, крупная подпись, подсветка при наведении.</summary>
+        Button MenuBtn(RectTransform parent, string label, Vector2 topLeft, Vector2 size)
+        {
+            var rt = UIStyle.Panel(parent, "MB_" + label, new Vector2(0, 1), new Vector2(0, 1),
+                                   new Vector2(topLeft.x, topLeft.y - size.y), new Vector2(topLeft.x + size.x, topLeft.y),
+                                   new Color(0.10f, 0.24f, 0.16f, 0.55f));            // рамка
+            var core = UIStyle.Panel(rt, "Core", Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2),
+                                     new Color(0.026f, 0.075f, 0.05f, 0.95f));        // плашка
+            var coreImage = core.GetComponent<Image>();
+            var txt = UIStyle.Label(rt, label, 25, new Color(0.88f, 0.99f, 0.92f, 1f), TextAnchor.MiddleLeft);
+            txt.fontStyle = FontStyle.Bold;
+            txt.rectTransform.offsetMin = new Vector2(26, 4);
+            txt.rectTransform.offsetMax = new Vector2(-12, -4);
+            var btn = rt.gameObject.AddComponent<Button>();
+            btn.targetGraphic = coreImage;                                          // подсвечивается плашка
+            var c = btn.colors;
+            c.normalColor = Color.white;
+            c.highlightedColor = new Color(1.8f, 1.9f, 1.85f, 1f);                  // заметная подсветка
+            c.pressedColor = new Color(0.6f, 0.9f, 0.72f, 1f);
+            c.selectedColor = Color.white;
+            c.fadeDuration = 0.07f;
+            btn.colors = c;
+            return btn;
+        }
+
+        /// <summary>Модалка «СЕТЕВАЯ ИГРА»: хост одним кликом, подключение по IP.</summary>
+        void OpenNetPanel()
+        {
+            if (_netPanel == null) return;
+            _netPanel.gameObject.SetActive(!_netPanel.gameObject.activeSelf);
+            if (_netFieldActive()) _ipField.ActivateInputField();
+        }
+
+        bool _netFieldActive() => _ipField != null && _netPanel != null && _netPanel.gameObject.activeSelf;
+
+        /// <summary>Убирает главное меню и разворачивает лог на весь экран — режим загрузки мира.</summary>
+        void EnterBootMode()
+        {
+            if (_bootMode) return;
+            _bootMode = true;
+            if (_menuRoot != null) _menuRoot.gameObject.SetActive(false);
+            if (_promptBar != null) _promptBar.gameObject.SetActive(false);
+            if (_hintBar != null) _hintBar.gameObject.SetActive(false);
+            if (_log != null)
+            {
+                _log.rectTransform.anchorMin = Vector2.zero;
+                _log.rectTransform.anchorMax = Vector2.one;
+                _log.rectTransform.offsetMin = new Vector2(36, 64);
+                _log.rectTransform.offsetMax = new Vector2(-36, -52);
+                _log.fontSize = 17;
+                _log.verticalOverflow = VerticalWrapMode.Truncate;
+            }
+            _lines.Clear();
+            foreach (var l in Logo) Add("<color=#7dffa8>" + l + "</color>");
+            Add("");
+            Flush();
         }
 
         void UpdateClock()
@@ -327,6 +465,34 @@ namespace Subsistence.UI
         {
             if (!_root.gameObject.activeSelf) return;
 
+            // Печать в поле IP (модалка сети) — консоль не должна перехватывать клавиши
+            var es = UnityEngine.EventSystems.EventSystem.current;
+            var focused = es != null && es.currentSelectedGameObject != null
+                          ? es.currentSelectedGameObject.GetComponent<InputField>() : null;
+            if (focused != null)
+            {
+                if (focused == _ipField && (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+                {
+                    focused.DeactivateInputField();
+                    Execute("JOIN", string.IsNullOrEmpty(focused.text) ? null : focused.text.Trim());
+                }
+                if (Input.GetKeyDown(KeyCode.Escape)) focused.DeactivateInputField();
+                return;
+            }
+            if (Input.GetKeyDown(KeyCode.Escape) && _netPanel != null && _netPanel.gameObject.activeSelf)
+            { _netPanel.gameObject.SetActive(false); return; }
+
+            // цифры-хоткеи главного меню — ДО набора в строку: пустой буфер + меню на экране
+            // (раньше проверка шла после Input.inputString, цифра уже попадала в буфер — хоткеи не работали)
+            if (_buffer.Length == 0 && _menuRoot != null && _menuRoot.gameObject.activeSelf)
+            {
+                for (int i = 0; i < Menu.GetLength(0); i++)
+                {
+                    int d = Menu[i, 0][0] - '0';
+                    if (d >= 0 && d <= 9 && Input.GetKeyDown(KeyCode.Alpha0 + d)) { Execute(Menu[i, 2], null); return; }
+                }
+            }
+
             string typed = Input.inputString;
             for (int i = 0; i < typed.Length; i++)
             {
@@ -354,15 +520,6 @@ namespace Subsistence.UI
             }
             if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.C)) _buffer = "";
 
-            // цифры-хоткеи (когда строка пустая)
-            if (_buffer.Length == 0)
-            {
-                for (int i = 0; i < Menu.GetLength(0); i++)
-                {
-                    int d = Menu[i, 0][0] - '0';
-                    if (d >= 0 && d <= 9 && Input.GetKeyDown(KeyCode.Alpha0 + d)) { Execute(Menu[i, 2], null); return; }
-                }
-            }
         }
 
         void Submit()
@@ -383,7 +540,8 @@ namespace Subsistence.UI
             switch (cmd)
             {
                 case "1": case "PLAY": RequestPlay(false); break;
-                case "2": case "HOST":
+                case "2": case "NETWORK": OpenNetPanel(); break;
+                case "HOST":
 #if MIRROR
                     // Мир уже собран? Поднимаем сеть сразу, без пересоздания мира.
                     if (UIState.BootRunning)
@@ -396,7 +554,7 @@ namespace Subsistence.UI
                     RequestPlay(true);
 #endif
                     break;
-                case "3": case "JOIN":
+                case "JOIN":
 #if MIRROR
                     // 31в: настоящий JOIN. Адрес: JOIN / JOIN ip / JOIN ip:port.
                     if (!TryParseEndpoint(arg, out var joinAddr, out var joinPort))
@@ -418,12 +576,12 @@ namespace Subsistence.UI
                     Print("<color=#ffd23f>Mirror не включён в этом билде — меню «Subsistence → 3. Включить Mirror», потом «11. Сеть: собрать Mirror»</color>");
 #endif
                     break;
-                case "4": case "MAP": ShowMap(); break;
-                case "5": case "SYSINFO": case "ABOUT": ShowSysinfo(); break;
-                case "6": case "SETTINGS": ShowSettings(); break;
-                case "7": case "HELP": ShowHelp(); break;
-                case "8": case "C": case "CLS": case "CLEAR": PrintHeader(); break;
-                case "9": case "EXIT": case "QUIT":
+                case "MAP": ShowMap(); break;
+                case "SYSINFO": case "ABOUT": ShowSysinfo(); break;
+                case "3": case "SETTINGS": ShowSettings(); break;
+                case "4": case "HELP": ShowHelp(); break;
+                case "C": case "CLS": case "CLEAR": PrintHeader(); break;
+                case "5": case "EXIT": case "QUIT":
                     Print("завершение сеанса... спасибо, что играешь в SUBSISTENCE.");
                     Application.Quit();
                     break;
@@ -461,7 +619,7 @@ namespace Subsistence.UI
                     Subsistence.Net.SnapshotClient.ResetStats();
 #if MIRROR
                     Subsistence.Net.NetFlow.StopAll();
-                    Print("счётчики сети сброшены, сеть остановлена (снова: [2] HOST / [3] JOIN после рестарта игры)");
+                    Print("счётчики сети сброшены, сеть остановлена (снова — после рестарта игры: HOST / JOIN ip)");
 #else
                     Print("счётчики сети сброшены");
 #endif
@@ -488,7 +646,7 @@ namespace Subsistence.UI
             UIState.BootRunning = true;
             hostRequested = host;
             joinRequested = join;
-            HideSideMenu();
+            EnterBootMode();                  // меню прочь, лог на весь экран — пошла загрузка
             OnPlayRequested?.Invoke();
         }
 
@@ -514,40 +672,18 @@ namespace Subsistence.UI
             return true;
         }
 
-        void HideSideMenu()
-        {
-            var side = _root.Find("Side");
-            var sep = _root.Find("SideSep");
-            if (side) side.gameObject.SetActive(false);
-            if (sep) sep.gameObject.SetActive(false);
-            _log.rectTransform.offsetMin = new Vector2(16, 78);
-        }
 
-        public void ShowSideMenu()
-        {
-            var side = _root.Find("Side");
-            var sep = _root.Find("SideSep");
-            if (side) side.gameObject.SetActive(true);
-            if (sep) sep.gameObject.SetActive(true);
-            _log.rectTransform.offsetMin = new Vector2(356, 78);
-        }
 
         // ------------------------------------------------------------- ЭКРАНЫ
         public void PrintHeader()
         {
             _lines.Clear();
             _pending.Clear();
-            foreach (var l in Logo) _lines.Add("<color=#7dffa8>" + l + "</color>");
+            _lines.Add("<color=#b6ffd0>SUBSISTENCE 2.0</color> — режим выживания в Backrooms");
+            _lines.Add($"сид мира: <color=#b6ffd0>{PlayerPrefs.GetInt("subsistence_seed", 1337)}</color> (сменить: SEED 1337) · версия {version}");
             _lines.Add("");
-            _lines.Add("<color=#b6ffd0>СИСТЕМА SUBSISTENCE 2.0 CONSOLE</color> — режим выживания в Backrooms");
-            _lines.Add("");
-            _lines.Add("Доступные действия:");
-            _lines.Add("> меню-карта системы SUBSISTENCE <color=#5cff92>[OK]</color> — MAP");
-            _lines.Add("> Загрузка уровня 0 <color=#5cff92>[OK]</color> — PLAY");
-            _lines.Add("> Статус ядра: ошибок не найдено <color=#5cff92>[OK]</color> — SYSINFO");
-            _lines.Add("");
-            _lines.Add("Быстрый старт: <color=#b6ffd0>PLAY</color> — одиночная игра · <color=#b6ffd0>HOST</color> — сервер · <color=#b6ffd0>JOIN <ip></color> — подключиться");
-            _lines.Add("Все команды: <color=#b6ffd0>HELP</color>. Карта уровней: <color=#b6ffd0>MAP</color>. Система: <color=#b6ffd0>SYSINFO</color>.");
+            _lines.Add("Быстрый старт: <color=#b6ffd0>НОВАЯ ИГРА</color> — одиночная · <color=#b6ffd0>СЕТЕВАЯ ИГРА</color> — с друзьями (2–4)");
+            _lines.Add("Команды строки: <color=#b6ffd0>HOST</color> · <color=#b6ffd0>JOIN ip:порт</color> · <color=#b6ffd0>MAP</color> · <color=#b6ffd0>SYSINFO</color> · <color=#b6ffd0>SETTINGS</color> · <color=#b6ffd0>HELP</color> · <color=#b6ffd0>SKINS</color> · <color=#b6ffd0>CLS</color>");
             _lines.Add($"<color=#2f8c53>{QuestionsHint}</color>");
             Flush();
         }
@@ -558,6 +694,7 @@ namespace Subsistence.UI
             {
                 "<color=#b6ffd0>СПИСОК КОМАНД</color>",
                 "PLAY              запустить одиночную сессию (загрузка уровней 0 → 37 → 3)",
+                "NETWORK           панель сетевой игры (хост / подключение по IP:порт)",
                 "HOST              создать сервер (Mirror, порт 7777; цель 100+ онлайн, лимит 128)",
                 "JOIN <ip>         подключиться к серверу (например: JOIN 127.0.0.1)",
                 "MAP               карта трёх уровней с легендой и тирами лута",
@@ -649,8 +786,13 @@ namespace Subsistence.UI
         void AddRange(IEnumerable<string> lines) { foreach (var l in lines) Add(l); Flush(); }
         void Add(string line) => _lines.Add(line);
 
-        /// <summary>Добавить строку с «печатной машинкой» (используется загрузкой уровней).</summary>
-        public void Print(string line) => _pending.Add(FormatBoot(line));
+        /// <summary>Добавить строку с «печатной машинкой» (используется загрузкой уровней).
+        /// Печать запускается сама — раньше Play() никто не вызывал и лог молчал.</summary>
+        public void Print(string line)
+        {
+            _pending.Add(FormatBoot(line));
+            if (!_typing && isActiveAndEnabled) StartCoroutine(TypeRoutine());
+        }
 
         public void PrintBoot(string tag, string message) => Print($"<color=#5cff92>[{tag}]</color> {message}");
         public void PrintOk(string what) => Print($"<color=#5cff92>{what} ... ok</color>");
@@ -726,7 +868,7 @@ namespace Subsistence.UI
         }
 
         public void Hide() { if (_canvas != null) _canvas.gameObject.SetActive(false); }
-        public void Show() { if (_canvas != null) _canvas.gameObject.SetActive(true); ShowSideMenu(); }
+        public void Show() { if (_canvas != null) _canvas.gameObject.SetActive(true); EnterBootMode(); }
         public bool IsTyping => _typing;
         public bool IsVisible => _canvas != null && _canvas.gameObject.activeSelf;
     }

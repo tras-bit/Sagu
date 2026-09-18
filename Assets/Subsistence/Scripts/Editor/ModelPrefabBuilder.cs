@@ -212,11 +212,7 @@ namespace Subsistence.EditorTools
         {
             GameObject lod1 = LoadHpModel($"{dir}/{name}_lod1.fbx");
             GameObject lod2 = LoadHpModel($"{dir}/{name}_lod2.fbx");
-            if (lod1 == null)
-            {
-                if (lod2 != null) Object.DestroyImmediate(lod2);
-                return;
-            }
+            if (lod1 == null) return;
 
             var own = instance.GetComponentsInChildren<Renderer>(true);
             var go1 = Object.Instantiate(lod1, instance.transform); go1.name = "LOD1";
@@ -236,8 +232,9 @@ namespace Subsistence.EditorTools
             var group = instance.GetComponent<LODGroup>();
             if (group == null) group = instance.AddComponent<LODGroup>();
             group.SetLODs(lods);
-            Object.DestroyImmediate(lod1);
-            if (lod2 != null) Object.DestroyImmediate(lod2);
+            // lod1/lod2 — ассеты FBX (_lod1/_lod2.fbx), источник мешей для префаба: уничтожать
+            // их нельзя и не нужно — DestroyImmediate по ассету даёт
+            // «Destroying assets is not permitted» ×159 в консоли. Источники остаются в ModelsHP.
         }
 
         static GameObject LoadHpModel(string path)

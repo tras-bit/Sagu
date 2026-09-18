@@ -27,3 +27,4 @@ answers/
 # ОС
 .DS_Store
 Thumbs.db
+*.fbm/

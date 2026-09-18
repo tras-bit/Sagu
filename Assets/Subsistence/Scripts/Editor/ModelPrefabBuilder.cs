@@ -258,7 +258,9 @@ namespace Subsistence.EditorTools
             if (importer.importCameras) { importer.importCameras = false; dirty = true; }
             if (importer.importLights) { importer.importLights = false; dirty = true; }
             if (importer.importBlendShapes) { importer.importBlendShapes = false; dirty = true; }
-            if (!importer.importMaterials) { importer.importMaterials = true; dirty = true; }
+            // 2022.3: importMaterials выпилен (CS0619/CS0200) — теперь materialImportMode (1 = ImportStandard, как было true)
+            if (importer.materialImportMode != ModelImporterMaterialImportMode.ImportStandard)
+            { importer.materialImportMode = ModelImporterMaterialImportMode.ImportStandard; dirty = true; }
             if (importer.addCollider) { importer.addCollider = false; dirty = true; }   // коллайдеры даёт геймплей
             if (importer.meshCompression != ModelImporterMeshCompression.Off) { importer.meshCompression = ModelImporterMeshCompression.Off; dirty = true; }
             if (Mathf.Abs(importer.globalScale - 1f) > 0.0001f) { importer.globalScale = 1f; dirty = true; }

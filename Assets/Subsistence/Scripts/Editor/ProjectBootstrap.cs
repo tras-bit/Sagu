@@ -99,7 +99,14 @@ namespace Subsistence.EditorTools
         static void SetupPlayerSettings()
         {
             PlayerSettings.colorSpace = ColorSpace.Linear;
-            PlayerSettings.apiCompatibilityLevel = ApiCompatibilityLevel.NET_Standard_2_1;
+            // 2022.3: сеттер apiCompatibilityLevel устарел (CS0618), а члены ApiCompatibilityLevel
+            // меняются между минорками (CS0117 на NET_Standard_2_1). Берём лучший из наличных по имени.
+            foreach (var apiName in new[] { "NET_Standard_2_1", "NET_Unity_4_8", "NET_Framework", "NET_4_6", "NET_Standard_2_0" })
+                if (System.Enum.TryParse(apiName, out ApiCompatibilityLevel apiLevel))
+                {
+                    PlayerSettings.SetApiCompatibilityLevel(BuildTargetGroup.Standalone, apiLevel);
+                    break;
+                }
             PlayerSettings.companyName = string.IsNullOrEmpty(PlayerSettings.companyName) ? "Subsistence Team" : PlayerSettings.companyName;
             PlayerSettings.productName = "Subsistence";
             PlayerSettings.defaultScreenWidth = 1920;

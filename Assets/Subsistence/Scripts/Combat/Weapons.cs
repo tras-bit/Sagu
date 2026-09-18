@@ -463,10 +463,38 @@ namespace Subsistence.Combat
             }
 
             Fired?.Invoke(origin, dir);
-            Subsistence.Audio.AudioDirector.PlayAt("shot", origin, s.cls == WeaponClass.Sniper ? 1f : 0.8f, 1f, 0.06f);
+            // 39а: у каждого ствола свой .wav-выстрел; незнакомым — общий процедурный
+            string shotClip = ShotClipFor(item.id);
+            if (Subsistence.Audio.ProcAudio.Get(shotClip) == null) shotClip = "shot";
+            Subsistence.Audio.AudioDirector.PlayAt(shotClip, origin, s.cls == WeaponClass.Sniper ? 1f : 0.8f, 1f, 0.06f);
             Subsistence.AI.NoiseSystem.Emit(transform.position, s.soundRadius, Subsistence.AI.NoiseType.Gunshot);
 
             if (s.boltAction) StartReload(item, s);
+        }
+
+        /// <summary>39а: свой .wav-выстрел у смоделированных стволов; семейства делят звук (как силуэты в ModelLibrary).</summary>
+        static string ShotClipFor(string itemId)
+        {
+            switch (itemId)
+            {
+                case "rifle.ak": return "shot_rifle_ak";
+                case "rifle.m16":
+                case "rifle.lr300":
+                case "rifle.semiauto": return "shot_rifle_m4";
+                case "rifle.bolt":
+                case "rifle.m39": return "shot_rifle_bolt";
+                case "smg.mp5":
+                case "smg.thompson":
+                case "smg.custom":
+                case "smg.vector": return "shot_smg_mp5";
+                case "shotgun.pump":
+                case "shotgun.double":
+                case "shotgun.spas":
+                case "shotgun.waterpipe": return "shot_shotgun_pump";
+                case "lmg.m249": return "shot_lmg_m249";
+                case "rocket.launcher": return "shot_rocket_launcher";
+                default: return "shot";
+            }
         }
 
         Vector3 ApplySpread(Vector3 dir, float spreadRad)

@@ -126,6 +126,20 @@ namespace Subsistence.Combat
 
             // 2) поджог (молотов) и дым/флеш обрабатываются на клиенте эффектами
             if (kind == ExplosiveKind.Molotov) SpawnFirePool();
+            // 39а: .wav-взрыв у «настоящих» боеприпасов (С4/сачель/бобовый/Ф-1/мина/ракеты/40 мм)
+            switch (kind)
+            {
+                case ExplosiveKind.TimedCharge:
+                case ExplosiveKind.Satchel:
+                case ExplosiveKind.Beancan:
+                case ExplosiveKind.Grenade:
+                case ExplosiveKind.Landmine:
+                case ExplosiveKind.RocketBasic:
+                case ExplosiveKind.RocketHV:
+                case ExplosiveKind.Grenade40mmHE:
+                    Subsistence.Audio.AudioDirector.PlayAt("explosion", transform.position, 1f, 1f, 0.03f);
+                    break;
+            }
             Subsistence.AI.NoiseSystem.Emit(transform.position, 120f, Subsistence.AI.NoiseType.Explosion);
 
             Destroy(gameObject);

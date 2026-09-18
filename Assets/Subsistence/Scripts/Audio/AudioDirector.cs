@@ -203,14 +203,15 @@ namespace Subsistence.Audio
     /// <summary>Фон уровня: гул ламп (L0), вода и пар (L37), трансформатор (L3).</summary>
     public class LevelAmbience : MonoBehaviour
     {
-        AudioSource _a, _b;
+        AudioSource _a, _b, _c;
         LevelTheme _current = (LevelTheme)255;
 
         void Start()
         {
             _a = gameObject.AddComponent<AudioSource>();
             _b = gameObject.AddComponent<AudioSource>();
-            foreach (var s in new[] { _a, _b })
+            _c = gameObject.AddComponent<AudioSource>();
+            foreach (var s in new[] { _a, _b, _c })
             {
                 s.loop = true;
                 s.playOnAwake = false;
@@ -219,7 +220,8 @@ namespace Subsistence.Audio
             }
             _a.clip = ProcAudio.Get("hum_lamp");
             _b.clip = ProcAudio.Get("hum_transformer");
-            _a.Play(); _b.Play();
+            _c.clip = ProcAudio.Get("water_pool");     // 37в: плеск L37 (.wav-луп)
+            _a.Play(); _b.Play(); _c.Play();
         }
 
         void Update()
@@ -231,16 +233,17 @@ namespace Subsistence.Audio
                 _current = theme;
                 switch (theme)
                 {
-                    case LevelTheme.Corridors: SetTargets(0.22f, 0.0f); break;   // гудят лампы
-                    case LevelTheme.Poolrooms: SetTargets(0.06f, 0.05f); break;  // эхо залов, пар
-                    case LevelTheme.PowerStation: SetTargets(0.04f, 0.30f); break; // трансформатор
+                    case LevelTheme.Corridors: SetTargets(0.22f, 0.00f, 0.00f); break;   // гудят лампы
+                    case LevelTheme.Poolrooms: SetTargets(0.05f, 0.00f, 0.17f); break;  // плеск + эхо залов (37в)
+                    case LevelTheme.PowerStation: SetTargets(0.03f, 0.30f, 0.00f); break; // трансформатор
                 }
             }
             _a.volume = Mathf.MoveTowards(_a.volume, _targetA, Time.deltaTime * 0.25f);
             _b.volume = Mathf.MoveTowards(_b.volume, _targetB, Time.deltaTime * 0.25f);
+            _c.volume = Mathf.MoveTowards(_c.volume, _targetC, Time.deltaTime * 0.25f);
         }
 
-        float _targetA, _targetB;
-        void SetTargets(float a, float b) { _targetA = a; _targetB = b; }
+        float _targetA, _targetB, _targetC;
+        void SetTargets(float a, float b, float c) { _targetA = a; _targetB = b; _targetC = c; }
     }
 }

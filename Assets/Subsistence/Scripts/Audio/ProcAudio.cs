@@ -1,9 +1,10 @@
 // ============================================================================
 //  SUBSISTENCE — Audio/ProcAudio.cs
-//  Процедурный звук: все клипы генерируются математикой в рантайме (PCM),
-//  поэтому в архиве нет ни одного .wav/.ogg — игра весит столько же, а звучит.
-//  Это осознанное решение: 100+ МБ сэмплов «ультра-реализма» противоречат
-//  компактному билду, а гул ламп, капли, шёпот и треск прекрасно считаются.
+//  Процедурный звук: клипы генерируются математикой в рантайме (PCM) — игра
+//  не тащит сотни мегабайт банков. С версии 1.1 (37в/39а) есть исключение:
+//  готовые .wav-сэмплы в Resources/audio (фоны уровней, выстрелы, взрывы)
+//  автоматически перекрывают процедурную версию с тем же именем — Get()
+//  сначала смотрит туда, и только потом считает на лету.
 //
 //  Что есть: гул ламп (L0), трансформатор (L3), капли воды (L37), шаги
 //  (ковролин/кафель/вода), шёпот Шептуна, треск Искровика, рык, крик, выстрел,
@@ -25,10 +26,10 @@ namespace Subsistence.Audio
         /// <summary>Все имена клипов — для предзагрузки и дебага.</summary>
         public static readonly string[] AllNames =
         {
-            "hum_lamp", "hum_transformer", "water_drip", "step_carpet", "step_tile", "step_wet",
+            "hum_lamp", "hum_transformer", "water_pool", "water_drip", "step_carpet", "step_tile", "step_wet",
             "whisper", "crackle", "shot", "reload", "dryfire", "hit_flesh", "hit_metal",
             "build_place", "hammer_up", "repair_ticks", "demolish", "pickup", "craft_done",
-            "electric", "growl", "scream", "research_done"
+            "electric", "growl", "scream", "research_done", "explosion"
         };
 
         public static void Prebuild()
@@ -41,6 +42,10 @@ namespace Subsistence.Audio
         public static AudioClip Get(string name)
         {
             if (_clips.TryGetValue(name, out var c) && c != null) return c;
+            // 37в/39а: готовые .wav-сэмплы (Resources/audio) важнее процедурки —
+            // есть файл с таким именем → играем его, нет → считаем на лету.
+            var sample = Resources.Load<AudioClip>("audio/" + name);
+            if (sample != null) { _clips[name] = sample; return sample; }
             float[] data = Build(name);
             if (data == null) return null;
             var clip = AudioClip.Create(name, data.Length, 1, Rate, false);

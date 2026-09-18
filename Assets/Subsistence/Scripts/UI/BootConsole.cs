@@ -383,10 +383,40 @@ namespace Subsistence.UI
             switch (cmd)
             {
                 case "1": case "PLAY": RequestPlay(false); break;
-                case "2": case "HOST": RequestPlay(true); break;
+                case "2": case "HOST":
+#if MIRROR
+                    // Мир уже собран? Поднимаем сеть сразу, без пересоздания мира.
+                    if (UIState.BootRunning)
+                    {
+                        if (Subsistence.Net.NetFlow.StartHost(Subsistence.Net.CmdLine.Port))
+                            Print($"<color=#39ff6a>[NET] ХОСТ: порт {Subsistence.Net.CmdLine.Port} — ждём игроков. Друзьям: JOIN <твой-ip>:{Subsistence.Net.CmdLine.Port}</color>");
+                    }
+                    else RequestPlay(true);
+#else
+                    RequestPlay(true);
+#endif
+                    break;
                 case "3": case "JOIN":
-                    Print($"<color=#b6ffd0>подключение к {(string.IsNullOrEmpty(arg) ? "127.0.0.1" : arg)}:7777 ... установлено (Mirror, 30 Гц)</color>");
-                    RequestPlay(false);
+#if MIRROR
+                    // 31в: настоящий JOIN. Адрес: JOIN / JOIN ip / JOIN ip:port.
+                    if (!TryParseEndpoint(arg, out var joinAddr, out var joinPort))
+                    { Print("<color=#ffd23f>формат: JOIN ip[:port], например JOIN 192.168.1.5:7777</color>"); break; }
+                    joinAddress = joinAddr;
+                    joinPort = (ushort)(joinPort > 0 ? joinPort : Subsistence.Net.CmdLine.Port);
+                    if (UIState.BootRunning)
+                    {
+                        // мир уже собран — подключаемся сразу
+                        if (Subsistence.Net.NetFlow.StartClient(joinAddress, joinPort))
+                            Print($"<color=#39ff6a>[NET] подключение к {joinAddress}:{joinPort} ...</color>");
+                    }
+                    else
+                    {
+                        Print($"<color=#b6ffd0>подключение к {joinAddress}:{joinPort} — загружаю мир и вхожу...</color>");
+                        RequestPlay(false, true);
+                    }
+#else
+                    Print("<color=#ffd23f>Mirror не включён в этом билде — меню «Subsistence → 3. Включить Mirror», потом «11. Сеть: собрать Mirror»</color>");
+#endif
                     break;
                 case "4": case "MAP": ShowMap(); break;
                 case "5": case "SYSINFO": case "ABOUT": ShowSysinfo(); break;
@@ -418,6 +448,9 @@ namespace Subsistence.UI
                     // Что реально идёт по сети: приём снапшотов, трафик, реестр сущностей (100+)
                     if (!UIState.BootRunning) RequestPlay(false);
                     Print($"<color=#2f8c53>{Subsistence.Net.SnapshotClient.Report()}</color>");
+#if MIRROR
+                    Print($"запуск сети: {Subsistence.Net.NetFlow.Status()}");
+#endif
                     Print($"сущностей в реестре: {Subsistence.Net.NetEntity.RegisteredCount}, " +
                           $"транспорт: {Subsistence.Net.NetworkBridge.Host?.GetType().Name ?? "offline"}, " +
                           $"онлайн-профиль: AOI {Subsistence.Core.Balance.AoiRadius:F0} м → " +
@@ -426,7 +459,12 @@ namespace Subsistence.UI
                     break;
                 case "NETRESET":
                     Subsistence.Net.SnapshotClient.ResetStats();
+#if MIRROR
+                    Subsistence.Net.NetFlow.StopAll();
+                    Print("счётчики сети сброшены, сеть остановлена (снова: [2] HOST / [3] JOIN после рестарта игры)");
+#else
                     Print("счётчики сети сброшены");
+#endif
                     break;
                 case "SEED":
                     if (int.TryParse(arg, out int s))
@@ -444,12 +482,36 @@ namespace Subsistence.UI
             }
         }
 
-        void RequestPlay(bool host)
+        void RequestPlay(bool host, bool join = false)
         {
             UIState.AnyMenuOpen = false;
             UIState.BootRunning = true;
+            hostRequested = host;
+            joinRequested = join;
             HideSideMenu();
             OnPlayRequested?.Invoke();
+        }
+
+        // ---- сеть (31в): что попросили из меню — RuntimeBootstrap стартует ПОСЛЕ генерации мира ----
+        [NonSerialized] public bool hostRequested;
+        [NonSerialized] public bool joinRequested;
+        [NonSerialized] public string joinAddress = "127.0.0.1";
+        [NonSerialized] public ushort joinPort = 7777;
+
+        /// <summary>"ip", "ip:port", "" → адрес+порт (0 = порт по умолчанию).</summary>
+        static bool TryParseEndpoint(string s, out string addr, out int port)
+        {
+            addr = "127.0.0.1"; port = 0;
+            if (string.IsNullOrWhiteSpace(s)) return true;
+            int i = s.LastIndexOf(':');
+            if (i >= 0)
+            {
+                if (!int.TryParse(s.Substring(i + 1), out port) || port < 1 || port > 65535) return false;
+                s = s.Substring(0, i);
+            }
+            if (string.IsNullOrWhiteSpace(s)) return false;
+            addr = s.Trim();
+            return true;
         }
 
         void HideSideMenu()

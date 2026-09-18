@@ -108,6 +108,11 @@ namespace Subsistence.Player
         [Header("Камера")]
         public Transform cameraPivot;
         public Camera viewCamera;
+
+        /// <summary>Сетевой двойник (MirrorPlayer): ввод не обрабатывает — позицию назначает сервер.
+        /// Локальный игрок (RuntimeBootstrap.CreatePlayer) всегда false. Поле сериализуется
+        /// в префаб (меню «11» ставит true) — поэтому БЕЗ [NonSerialized].</summary>
+        public bool remoteControlled;
         public float mouseSensitivity = 2.2f;
         public float maxPitch = 89f;
         public float bobAmount = 0.035f;
@@ -147,6 +152,7 @@ namespace Subsistence.Player
             bool uiOpen = Subsistence.UI.UIState.AnyMenuOpen;
             PlayerInput.Poll(uiOpen);
             if (uiOpen) { UpdateCameraOnly(); return; }
+            if (remoteControlled) return;   // сетевой двойник: его двигает сервер (MirrorPlayer.Move), не наш ввод
 
             HandleLook();
             HandleMove();

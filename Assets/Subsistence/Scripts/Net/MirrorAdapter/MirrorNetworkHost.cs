@@ -104,7 +104,8 @@ namespace Subsistence.Net
     public class MirrorSubsistenceManager : NetworkManager
     {
         [Header("Subsistence")]
-        public GameObject playerPrefab;          // prefab игрока с MirrorPlayer
+        // playerPrefab наследуем у NetworkManager (тот же тип) — не переобъявляем, чтобы
+        // Mirror-инфраструктура (автоспавн, ready-проверки) видела то же самое поле.
         public float snapshotInterval = 1f / 20f;
         public int maxPlayers = Balance.MaxPlayerSlots;      // слотов (128)
         public int softPlayerLimit = Balance.MaxPlayersOnline;// онлайн, выше которого не пускаем (112)
@@ -308,6 +309,13 @@ namespace Subsistence.Net
         /// <summary>Спавн игрока на сервере (вызывается из лобби/меню).</summary>
         public override void OnServerAddPlayer(NetworkConnectionToClient conn)
         {
+            if (playerPrefab == null)
+            {
+                Debug.LogError("[Mirror] playerPrefab не задан (нет Resources/Net/MirrorPlayer.prefab). " +
+                               "Запусти меню «Subsistence → 11. Сеть: собрать Mirror (менеджер+префаб)».");
+                conn.Disconnect();
+                return;
+            }
             var go = Instantiate(playerPrefab);
             var mp = go.GetComponent<MirrorPlayer>();
             var spawn = Subsistence.Runtime.RuntimeBootstrap.FindAnyObjectByType<Subsistence.Runtime.RuntimeBootstrap>();
@@ -327,6 +335,17 @@ namespace Subsistence.Net
         public ulong GameId => (ulong)netId;
         [SyncVar] public float syncHealth = 100f;
         [SyncVar] public byte syncFlags;
+
+        /// <summary>Тело-аватар (капсула из меню «11», сериализуется в префаб).
+        /// Владельцу не показываем свой же двойник.</summary>
+        public Renderer bodyRenderer;
+
+        public override void OnStartLocalPlayer()
+        {
+            base.OnStartLocalPlayer();
+            var r = bodyRenderer != null ? bodyRenderer : GetComponentInChildren<Renderer>();
+            if (r != null) r.enabled = false;   // свой двойник невидим: мы и так «в теле» локального игрока
+        }
 
         Subsistence.Player.PlayerController _controller;
 

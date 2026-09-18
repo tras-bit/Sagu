@@ -62,7 +62,7 @@ namespace Subsistence.Runtime
 
             // Аргументы командной строки: headless-сервер, клиент, стенд нагрузки 100+ (docs/MULTIPLAYER.md)
             CmdLine.Parse(System.Environment.GetCommandLineArgs());
-            if (CmdLine.Server || CmdLine.LoadBots > 0) autoPlay = true;
+            if (CmdLine.Server || CmdLine.Client || CmdLine.LoadBots > 0) autoPlay = true;
 
             // Терминальная консоль = главное меню (стиль BACKROOMS OPERATING SYSTEM):
             // шапка, боковое меню [1] ИГРАТЬ … [0] ВЫХОД, лог с логотипом, строка ввода.
@@ -207,6 +207,35 @@ namespace Subsistence.Runtime
             boot.Print(" ");
             boot.Print("<color=#39ff6a>subsistence ready. good luck. level 0 has no exit signs.</color>");
             yield return new WaitForSeconds(1.2f);
+
+#if MIRROR
+            // 31в: мир собран (сид фиксированный → ландшафт у всех одинаковый) — поднимаем сеть.
+            // Порядок приоритета: явно из меню (HOST/JOIN) → ключи командной строки (--server/--client).
+            // Печатаем ДО boot.Hide(), чтобы строки были видны в логе консоли.
+            if (boot.hostRequested)
+            {
+                Subsistence.Net.NetFlow.StartHost(Subsistence.Net.CmdLine.Port);
+                boot.Print($"<color=#39ff6a>[NET] ХОСТ: порт {Subsistence.Net.CmdLine.Port}. Друзьям: JOIN <твой-ip>:{Subsistence.Net.CmdLine.Port}</color>");
+            }
+            else if (boot.joinRequested)
+            {
+                boot.Print($"<color=#39ff6a>[NET] подключение к {boot.joinAddress}:{boot.joinPort} ...</color>");
+                Subsistence.Net.NetFlow.StartClient(boot.joinAddress, boot.joinPort);
+            }
+            else if (Subsistence.Net.CmdLine.Server)
+            {
+                Subsistence.Net.NetFlow.StartServerOnly(Subsistence.Net.CmdLine.Port);
+                boot.Print($"<color=#39ff6a>[NET] выделенный сервер: порт {Subsistence.Net.CmdLine.Port}</color>");
+            }
+            else if (Subsistence.Net.CmdLine.Client)
+            {
+                boot.Print($"<color=#39ff6a>[NET] подключение к {Subsistence.Net.CmdLine.Host}:{Subsistence.Net.CmdLine.Port} ...</color>");
+                Subsistence.Net.NetFlow.StartClient(Subsistence.Net.CmdLine.Host, Subsistence.Net.CmdLine.Port);
+            }
+#else
+            if (boot.hostRequested || boot.joinRequested)
+                boot.Print("<color=#ffd23f>[NET] сборка без Mirror: HOST/JOIN недоступны (меню «Subsistence → 3. Включить Mirror» в редакторе)</color>");
+#endif
 
             boot.Hide();
             Cursor.lockState = CursorLockMode.Locked;

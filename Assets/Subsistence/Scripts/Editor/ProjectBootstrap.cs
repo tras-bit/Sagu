@@ -375,6 +375,73 @@ namespace Subsistence.EditorTools
             EditorApplication.delayCall += () => { EditorApplication.isPlaying = true; };
         }
 
+        // ================== 11. Сеть: собрать Mirror (префаб игрока) ==================
+#if MIRROR
+        /// <summary>
+        /// Собирает Resources/Net/MirrorPlayer.prefab — аватар для чужих игроков.
+        /// Капсула-тело (виден другим) + CharacterController (габариты как у локального) +
+        /// PlayerController(remoteControlled — ввод не слушает) + MirrorPlayer (команды/синхронизация) +
+        /// NetworkTransform (сервер→клиенты, чтобы чужие ходьба плавно отображалась).
+        /// Сам менеджер + транспорт создаются в рантайме (NetFlow.EnsureManager) при HOST/JOIN.
+        /// </summary>
+        [MenuItem("Subsistence/11. Сеть: собрать Mirror (менеджер+префаб)", priority = 23)]
+        public static void BuildNetPlayerPrefab()
+        {
+            const string dir = "Assets/Subsistence/Resources/Net";
+            const string path = dir + "/MirrorPlayer.prefab";
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+            int layerPlayer = LayerMask.NameToLayer("Player");
+            if (layerPlayer < 0) layerPlayer = 0;
+
+            // Тело-аватар: материал сначала на диск (иначе ссылка из префаба потеряется)
+            var shader = Shader.Find("HDRP/Lit") ?? Shader.Find("Standard");
+            var mat = new Material(shader);
+            mat.SetColor(shader.name.Contains("HDRP") ? "_BaseColor" : "_Color", new Color(0.55f, 0.6f, 0.65f));
+            const string matPath = dir + "/PlayerBody.mat";
+            AssetDatabase.DeleteAsset(matPath);
+            AssetDatabase.CreateAsset(mat, matPath);
+
+            var root = new GameObject("MirrorPlayer");
+            try
+            {
+                root.layer = layerPlayer;
+
+                var cc = root.AddComponent<CharacterController>();   // габариты = локальный игрок (RuntimeBootstrap.CreatePlayer)
+                cc.height = 1.8f; cc.radius = 0.35f; cc.center = new Vector3(0, 0.9f, 0);
+                cc.slopeLimit = 50f; cc.stepOffset = 0.4f;
+
+                var body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+                DestroyImmediate(body.GetComponent<Collider>());     // коллайдер не нужен — CharacterController сверху
+                body.name = "Body";
+                body.transform.SetParent(root.transform, false);
+                body.transform.localPosition = new Vector3(0, 0.9f, 0);
+                body.transform.localScale = new Vector3(0.7f, 0.9f, 0.7f);
+                body.layer = layerPlayer;
+                var rend = body.GetComponent<Renderer>();
+                rend.sharedMaterial = AssetDatabase.LoadAssetAtPath<Material>(matPath);
+
+                var pc = root.AddComponent<Subsistence.Player.PlayerController>();
+                pc.remoteControlled = true;                          // его двигает сервер (MirrorPlayer.Move), не локальный ввод
+
+                var mp = root.AddComponent<Subsistence.Net.MirrorPlayer>();
+                mp.bodyRenderer = rend;                              // OnStartLocalPlayer скроет свой двойник
+
+                var nt = root.AddComponent<Mirror.NetworkTransform>();
+                var f = nt.GetType().GetField("syncDirection");      // сервер → клиенты; через рефлексию на случай переименований
+                if (f != null) { try { f.SetValue(nt, Enum.Parse(f.FieldType, "ServerToClient")); } catch { } }
+
+                PrefabUtility.SaveAsPrefabAsset(root, path);
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+                Debug.Log($"<color=#39ff6a>[Subsistence] 11. сеть собрана</color>: {path}\n" +
+                          "Как играть (2–4 игрока): у первого [2] HOST, у остальных [3] JOIN <ip-хоста>:7777. " +
+                          "Менеджер/транспорт поднимутся сами (NetFlow).");
+            }
+            finally { DestroyImmediate(root); }
+        }
+#endif
+
         /// <summary>Все шаги без билда — используется кнопкой «Играть сейчас».</summary>
         static void RunAllSteps()
         {

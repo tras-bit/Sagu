@@ -1158,6 +1158,25 @@ def class_members(node, src):
     return out
 
 
+def check_U_unqualified_object_statics(idx, path, src, tree, out):
+    """CS0103: Destroy/DestroyImmediate/Instantiate/DontDestroyOnLoad — статические члены
+    UnityEngine.Object. Без квалификации они легальны ТОЛЬКО внутри классов-наследников
+    Object (MonoBehaviour и т.п.). В статическом классе (Editor-утилиты) это CS0103 —
+    и падает ВЕСЬ редакторский код: меню Subsistence исчезает целиком (баг v1.1.3)."""
+    import re as _re
+    if isinstance(src, bytes): src = src.decode("utf-8", "replace")
+    bases = _re.findall(r"class\s+\w+\s*:\s*([^\{]+)", src)
+    if any(_re.search(r"\b(MonoBehaviour|NetworkBehaviour|ScriptableObject|EditorWindow|Editor|Object|UIBehaviour)\b", b)
+           for b in bases):
+        return
+    nocomment = "\n".join(ln.split("//")[0] for ln in src.split("\n"))
+    for m in _re.finditer(r"(?<![\w.])(DestroyImmediate|Destroy|DontDestroyOnLoad|Instantiate)\s*\(", nocomment):
+        line = nocomment.count("\n", 0, m.start()) + 1
+        out.append((path, line, "U",
+                    f"`{m.group(1)}(...)` без квалификации — статик UnityEngine.Object; в классе без наследования "
+                    f"от Object это CS0103, редакторский код падает целиком. Пиши UnityEngine.Object.{m.group(1)}(...)"))
+
+
 def check_T_unused_local(idx, path, src, tree, out, cmap):
     """CS0219: локальная переменная с инициализатором, которую больше нигде не читают.
     Именно этот warning Unity дал на `int at = 0;` в ProcAudio — теперь ловится заранее."""
@@ -1707,6 +1726,7 @@ def main():
         check_R_wrong_scope_name(idx, p, src, tree, findings, cmap)
         check_S_dictionary_value(idx, p, src, tree, findings, cmap)
         check_T_unused_local(idx, p, src, tree, findings, cmap)
+        check_U_unqualified_object_statics(idx, p, src, tree, findings)
     check_O2_nested_cross_file(idx, files, srcs, trees, findings)
 
     seen = set()
@@ -1728,7 +1748,8 @@ def main():
              "O": "вложенный тип снаружи (CS0246)", "P": "член затеняет namespace (CS1061)",
              "Q": "метод другого класса без префикса (CS0103)", "R": "имя не в этой области (CS0103)",
              "S": "словарь без .Value (CS1061)",
-             "T": "мертвая переменная (CS0219)"}
+             "T": "мертвая переменная (CS0219)",
+             "U": "статик UnityEngine.Object без квалификации (CS0103)"}
     for path, line, kind, msg in sorted(uniq, key=lambda x: (x[2], os.path.relpath(x[0], folder), x[1])):
         print(f"[{kind}] {os.path.relpath(path, folder)}:{line}  ({names[kind]})")
         print(f"      {msg}")

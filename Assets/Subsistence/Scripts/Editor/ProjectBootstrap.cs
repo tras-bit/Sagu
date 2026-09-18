@@ -418,7 +418,7 @@ namespace Subsistence.EditorTools
                 cc.slopeLimit = 50f; cc.stepOffset = 0.4f;
 
                 var body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-                DestroyImmediate(body.GetComponent<Collider>());     // коллайдер не нужен — CharacterController сверху
+                UnityEngine.Object.DestroyImmediate(body.GetComponent<Collider>());     // коллайдер не нужен — CharacterController сверху
                 body.name = "Body";
                 body.transform.SetParent(root.transform, false);
                 body.transform.localPosition = new Vector3(0, 0.9f, 0);
@@ -444,7 +444,7 @@ namespace Subsistence.EditorTools
                           "Как играть (2–4 игрока): у первого [2] HOST, у остальных [3] JOIN <ip-хоста>:7777. " +
                           "Менеджер/транспорт поднимутся сами (NetFlow).");
             }
-            finally { DestroyImmediate(root); }
+            finally { UnityEngine.Object.DestroyImmediate(root); }
         }
 #endif
 
@@ -491,13 +491,13 @@ namespace Subsistence.EditorTools
             }
             finally
             {
-                if (canvas != null) DestroyImmediate(canvas.gameObject);
+                if (canvas != null) UnityEngine.Object.DestroyImmediate(canvas.gameObject);
                 if (!hadEs)
                 {
                     var es = UnityEngine.EventSystems.EventSystem.current;      // создано тестом — убираем
-                    if (es != null) DestroyImmediate(es.gameObject);
+                    if (es != null) UnityEngine.Object.DestroyImmediate(es.gameObject);
                 }
-                if (bcGo != null) DestroyImmediate(bcGo);
+                if (bcGo != null) UnityEngine.Object.DestroyImmediate(bcGo);
             }
         }
 

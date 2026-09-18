@@ -211,8 +211,94 @@ namespace Subsistence.UI
         void Awake()
         {
             Instance = this;
-            BuildUI();
-            PrintHeader();
+            try
+            {
+                BuildUI();
+                PrintHeader();
+            }
+            catch (System.Exception e)
+            {
+                // меню не должно умирать молча: показываем ошибку на экран вместо пустоты
+                Debug.LogException(e);
+                FatalFallback(e);
+                return;
+            }
+            // самопроверка: зелёная строка в логе = меню живое и всё кликается
+            var problems = MenuSelfCheck();
+            if (problems.Length == 0)
+                Print("<color=#5cff92>[МЕНЮ] проверка пройдена: EventSystem, канвас + raycaster, 8 кнопок, поле IP — всё кликается</color>");
+            else
+                foreach (var p in problems)
+                    Print("<color=#ff6b5e>[МЕНЮ] ПРОБЛЕМА: " + p + "</color>");
+        }
+
+        /// <summary>Канвас меню (для редакторского теста «Subsistence → 12»).</summary>
+        public Canvas Canvas => _canvas;
+
+        /// <summary>
+        /// Самопроверка меню: EventSystem (иначе кнопки не жмутся), канвас с raycaster'ом,
+        /// 8 кнопок, поле IP с текстом, лог/строка ввода, и нет объектов с двумя Graphic
+        /// (именно это ломало меню в 1.1.1). Пустой массив = всё в порядке.
+        /// </summary>
+        public string[] MenuSelfCheck()
+        {
+            var problems = new List<string>();
+            // current не заполнен в edit-режиме (OnEnable не звался) — ищем и объект тоже
+            var es = UnityEngine.EventSystems.EventSystem.current
+                     ?? FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>();
+            if (es == null)
+                problems.Add("нет EventSystem — кнопки не будут нажиматься");
+            if (_canvas == null) problems.Add("канвас не создан");
+            else if (_canvas.gameObject.GetComponent<GraphicRaycaster>() == null)
+                problems.Add("на канвасе нет GraphicRaycaster — клики не дойдут до кнопок");
+            if (_menuRoot == null) problems.Add("главное меню не собрано");
+            else
+            {
+                int btns = _menuRoot.GetComponentsInChildren<Button>(true).Length;
+                if (btns < 8) problems.Add($"кнопок {btns} из 8 (5 меню + СОЗДАТЬ СЕРВЕР + ПОДКЛЮЧИТЬСЯ + НАЗАД)");
+            }
+            if (_netPanel == null) problems.Add("панель «СЕТЕВАЯ ИГРА» не создана");
+            if (_ipField == null) problems.Add("поле IP не создано");
+            else if (_ipField.textComponent == null || _ipField.placeholder == null)
+                problems.Add("поле IP без текста/подсказки — ввод не будет виден");
+            if (_log == null || _input == null || _caret == null)
+                problems.Add("лог/строка ввода/курсор не созданы");
+            if (_promptBar == null || _hintBar == null) problems.Add("нижняя панель не создана");
+            if (_canvas != null)
+            {
+                var seen = new HashSet<GameObject>();
+                int dup = 0;
+                foreach (var g in _canvas.GetComponentsInChildren<Graphic>(true))
+                    if (!seen.Add(g.gameObject)) dup++;
+                if (dup > 0) problems.Add($"объектов с двумя Graphic: {dup} — UI соберётся криво (Can't add 'Image')");
+            }
+            return problems.ToArray();
+        }
+
+        /// <summary>Аварийный экран: если сборка меню упала — красная ошибка вместо пустого зависшего экрана.</summary>
+        void FatalFallback(System.Exception e)
+        {
+            try
+            {
+                if (_canvas == null)
+                {
+                    var go = new GameObject("BootFatalCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+                    _canvas = go.GetComponent<Canvas>();
+                    _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                    _canvas.sortingOrder = 300;
+                    if (UnityEngine.EventSystems.EventSystem.current == null)
+                        new GameObject("EventSystem", typeof(UnityEngine.EventSystems.EventSystem),
+                                       typeof(UnityEngine.EventSystems.StandaloneInputModule));
+                }
+                var t = UIStyle.Label(_canvas.transform,
+                    "<color=#ff6b5e>ОШИБКА СБОРКИ МЕНЮ</color>\n\n" +
+                    e.GetType().Name + ": " + e.Message + "\n\n" +
+                    "пришли этот текст — починю. Запуск игры пока невозможен.",
+                    26, Color.white, TextAnchor.UpperLeft);
+                t.rectTransform.anchorMin = new Vector2(0.08f, 0.55f);
+                t.rectTransform.anchorMax = new Vector2(0.92f, 0.95f);
+            }
+            catch { /* совсем плохо — остаётся только лог Unity */ }
         }
 
         void Start()
@@ -236,7 +322,7 @@ namespace Subsistence.UI
                 var es = new GameObject("EventSystem",
                                         typeof(UnityEngine.EventSystems.EventSystem),
                                         typeof(UnityEngine.EventSystems.StandaloneInputModule));
-                DontDestroyOnLoad(es);
+                if (Application.isPlaying) DontDestroyOnLoad(es);   // в edit-режиме (тест «12») DontDestroyOnLoad не нужен
             }
 
             _canvas = UIStyle.CreateCanvas("SystemConsoleCanvas", 200, out _);

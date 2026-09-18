@@ -315,6 +315,12 @@ namespace Subsistence.EditorTools
             foreach (var _ in Subsistence.Crafting.RecipeBook.All) recipes++;
             report.AppendLine($"✓ Рецептов: {recipes}");
 
+            // меню: тот же тест, что и «Subsistence → 12» — соберётся ли UI и будут ли клики
+            var menuProblems = MenuUiProblems();
+            report.AppendLine(menuProblems.Length == 0
+                ? "✓ Меню (UI-тест): EventSystem, кнопки, поле IP — всё на месте, кликается"
+                : $"✗ Меню (UI-тест): проблем {menuProblems.Length} — детали: меню Subsistence → 12");
+
             Debug.Log(report.ToString());
         }
 
@@ -441,6 +447,59 @@ namespace Subsistence.EditorTools
             finally { DestroyImmediate(root); }
         }
 #endif
+
+        // ================== 12. Проверка меню (UI без Play) ==================
+        /// <summary>
+        /// Собирает меню тем же кодом, что и в игре (Awake в edit-mode не зовётся — дёргаем
+        /// BuildUI руками) и проверяет: EventSystem, канвас + GraphicRaycaster, 8 кнопок,
+        /// поле IP, дубли Graphic (баг 1.1.1). Всё созданное уничтожается, сцена не пачкается.
+        /// </summary>
+        [MenuItem("Subsistence/12. Проверка меню (UI без Play)", priority = 24)]
+        public static void ValidateMenuUi()
+        {
+            var problems = MenuUiProblems();
+            if (problems.Length == 0)
+                Debug.Log("<color=#39ff6a>[Subsistence] 12. МЕНЮ ОК</color>: EventSystem, канвас + GraphicRaycaster, " +
+                          "8 кнопок (5 меню + 3 сети), поле IP, лог, дубликатов Graphic нет. В Play всё кликается.");
+            else
+            {
+                Debug.LogError($"[Subsistence] 12. МЕНЮ: проблем {problems.Length} (в игре «ничего не тыкается»):");
+                foreach (var p in problems) Debug.LogError("   ✗ " + p);
+            }
+        }
+
+        /// <summary>Тот же тест без вывода — для «6. Проверка проекта».</summary>
+        static string[] MenuUiProblems()
+        {
+            GameObject bcGo = null; Canvas canvas = null;
+            bool hadEs = UnityEngine.EventSystems.EventSystem.current != null;
+            try
+            {
+                bcGo = new GameObject("BootConsole_SelfTest");
+                var bc = bcGo.AddComponent<Subsistence.UI.BootConsole>();       // Awake в edit-mode не зовётся
+                var build = typeof(Subsistence.UI.BootConsole).GetMethod("BuildUI",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                build.Invoke(bc, null);
+                canvas = typeof(Subsistence.UI.BootConsole)
+                         .GetProperty("Canvas", BindingFlags.Public | BindingFlags.Instance)
+                         ?.GetValue(bc) as Canvas;
+                return bc.MenuSelfCheck();
+            }
+            catch (Exception e)
+            {
+                return new[] { "сборка меню упала: " + (e.InnerException ?? e).Message };
+            }
+            finally
+            {
+                if (canvas != null) DestroyImmediate(canvas.gameObject);
+                if (!hadEs)
+                {
+                    var es = UnityEngine.EventSystems.EventSystem.current;      // создано тестом — убираем
+                    if (es != null) DestroyImmediate(es.gameObject);
+                }
+                if (bcGo != null) DestroyImmediate(bcGo);
+            }
+        }
 
         /// <summary>Все шаги без билда — используется кнопкой «Играть сейчас».</summary>
         static void RunAllSteps()

@@ -10,12 +10,19 @@
 //      Assets/Subsistence/Resources/Models/<Имя>.prefab — именно оттуда
 //      World/ModelLibrary.cs достаёт визуалы в рантайме (Resources.Load).
 //
-//  После этого пункта код сам начинает использовать настоящие модели:
-//  монстры, транспорт, торговец, вендинг, кабина лифта, лут-контейнеры и
-//  блоки постройки (с тинтом по тиру). Пока пункт не нажат — работают
-//  примитивные заглушки, игра не падает.
+//  Хай-поли пасс (ModelsHP), v1.1.5 «TEX-FIX»:
+//   - ФАЗА 1 (до StartAssetEditing): альбедо color×AO → <имя>_albedo.png,
+//     типы текстур (нормаль → NormalMap/linear) через настоящий
+//     SaveAndReimport, и материал сохраняется НА ДИСК как ассет
+//     ModelsHP/<имя>/<имя>_HP.mat. В 1.1.4 материал жил только в памяти —
+//     ссылка из префаба терялась, и в игре оставались плоские FBX-материалы.
+//   - ФАЗА 2: LOD-дети добавляются ДО назначения материала, поэтому
+//     <имя>_HP.mat получает и LOD0, и LOD1/LOD2 (раньше LOD-уровни
+//     оставались с FBX-материалами — отсюда «перемешанные» текстуры).
+//   - Пороги LOD 0.50/0.22/0.08 (раньше 0.60/0.30/0.10 — LOD1 включался
+//     почти всегда).
 //
-//  Пункт безопасно запускать повторно: префабы перезаписываются.
+//  Пункт безопасно запускать повторно: префабы и материалы перезаписываются.
 // ============================================================================
 #if UNITY_EDITOR
 using System.Collections.Generic;
@@ -56,7 +63,6 @@ namespace Subsistence.EditorTools
             // Хай-поли пасс: ModelsHP/<имя>/<имя>_hp.fbx (+ _color/_normal/_ao + _lod1/_lod2).
             // Если для модели есть HP-версия — префаб собирается из неё (имя то же, рантайм не меняется).
             var hpDirs = new Dictionary<string, string>();
-            int hpUsed = 0;
             if (Directory.Exists(ModelsHPRoot))
                 foreach (var dir in Directory.GetDirectories(ModelsHPRoot))
                 {
@@ -65,7 +71,12 @@ namespace Subsistence.EditorTools
                         hpDirs[baseName] = dir.Replace('\\', '/');
                 }
 
-            int made = 0, skipped = 0, reimported = 0;
+            // ФАЗА 1 — всё, что требует немедленного импорта/записи ассетов:
+            // альбедо, типы текстур, материал-ассет <имя>_HP.mat.
+            var hpMats = new Dictionary<string, Material>();
+            int hpTexFixed = PrepareHpAssets(hpDirs, hpMats);
+
+            int made = 0, skipped = 0, reimported = 0, hpUsed = 0;
             try
             {
                 AssetDatabase.StartAssetEditing();
@@ -87,8 +98,12 @@ namespace Subsistence.EditorTools
 
                     if (isHp)
                     {
-                        SetupHpMaterial(instance, name, hpDirs[name]);
+                        // Сначала LOD-дети, ПОТОМ материал — иначе LOD1/LOD2
+                        // останутся с плоскими FBX-материалами (баг 1.1.4).
                         SetupLodGroup(instance, name, hpDirs[name]);
+                        Material mat;
+                        if (hpMats.TryGetValue(name, out mat) && mat != null)
+                            ApplyHpMaterial(instance, mat);
                         hpUsed++;
                     }
 
@@ -107,59 +122,99 @@ namespace Subsistence.EditorTools
             }
 
             Debug.Log($"<color=#39ff6a>[Subsistence]</color> Модели: префабов собрано <b>{made}</b> " +
-                      $"(переимпортировано {reimported}, пропущено {skipped}, из них хай-поли <b>{hpUsed}</b>) → {ResourcesModels}\n" +
+                      $"(переимпортировано {reimported}, пропущено {skipped}, из них хай-поли <b>{hpUsed}</b>, " +
+                      $"материалов HP <b>{hpMats.Count}</b>, текстур поправлено {hpTexFixed}) → {ResourcesModels}\n" +
                       "Дальше ничего настраивать не нужно: World/ModelLibrary подхватит их сам.");
         }
 
         // ------------------------------------------------------------------
-        //  Хай-поли пасс (ModelsHP): материал с запечёнными картами + LODGroup
+        //  Хай-поли пасс (ModelsHP)
         // ------------------------------------------------------------------
 
-        /// <summary>Материал HDRP/Lit с albedo×AO и нормалями из ModelsHP/<имя>/.</summary>
-        static void SetupHpMaterial(GameObject instance, string name, string dir)
+        /// <summary>
+        /// Фаза 1: для каждой ModelsHP-модели готовит ассеты НА ДИСКЕ —
+        /// альбедо (color×AO), правильные типы текстур и материал
+        /// &lt;имя&gt;_HP.mat. Выполняется ВНЕ StartAssetEditing, чтобы
+        /// SaveAndReimport срабатывал сразу, а не откладывался.
+        /// </summary>
+        static int PrepareHpAssets(Dictionary<string, string> hpDirs, Dictionary<string, Material> mats)
         {
-            var renderers = instance.GetComponentsInChildren<Renderer>(true);
-            if (renderers.Length == 0) return;
-
-            string albedoPath = MakeAlbedoAo(dir, name);                 // color × AO (AO вшит в альбедо)
-            string normalPath = $"{dir}/{name}_normal.png";
-            string colorPath = $"{dir}/{name}_color.png";
-            if (!File.Exists(albedoPath) && !File.Exists(colorPath)) return;
-
+            if (hpDirs.Count == 0) return 0;
             var shader = Shader.Find("HDRP/Lit") ?? Shader.Find("Standard");
-            if (shader == null) return;
-            var mat = new Material(shader);
+            if (shader == null) return 0;
 
-            var albedo = LoadHpTexture(File.Exists(albedoPath) ? albedoPath : colorPath, false);
-            if (albedo != null) mat.SetTexture("_BaseColorMap", albedo);
-            if (File.Exists(normalPath))
+            int fixedTex = 0;
+            foreach (var kv in hpDirs)
             {
-                var normal = LoadHpTexture(normalPath, true);            // true → TextureImporter NormalMap
-                if (normal != null) mat.SetTexture("_NormalMap", normal);
-            }
-            if (mat.HasProperty("_BaseColorMap") && mat.GetTexture("_BaseColorMap") == null) return; // HDRP не нашёлся — не ломаем
-            if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", 0.75f);
+                string name = kv.Key, dir = kv.Value;
 
-            for (int i = 0; i < renderers.Length; i++)
-                renderers[i].sharedMaterial = mat;
+                // 1) альбедо: color × AO (AO вшит в альбедо, floor 0.55)
+                string albedoPath = MakeAlbedoAo(dir, name);
+                if (string.IsNullOrEmpty(albedoPath) || !File.Exists(albedoPath))
+                    albedoPath = $"{dir}/{name}_color.png";
+                if (!File.Exists(albedoPath)) continue;
+
+                // 2) типы текстур: альбедо Default/sRGB, нормаль NormalMap/linear
+                var albedo = EnsureTexture(albedoPath, false, ref fixedTex);
+                var normal = EnsureTexture($"{dir}/{name}_normal.png", true, ref fixedTex);
+                if (albedo == null) continue;
+
+                // 3) материал-ассет: ссылка из префаба живёт только на ассет с GUID.
+                var mat = GetOrCreateMaterial($"{dir}/{name}_HP.mat", shader);
+                if (!mat.HasProperty("_BaseColorMap")) continue;   // HDRP/Lit не нашёлся — не ломаем
+                mat.SetTexture("_BaseColorMap", albedo);
+                if (normal != null && mat.HasProperty("_NormalMap"))
+                    mat.SetTexture("_NormalMap", normal);
+                if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", 0.75f);
+                EditorUtility.SetDirty(mat);
+                mats[name] = mat;
+            }
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            return fixedTex;
         }
 
-        /// <summary>Импорт PNG из ModelsHP как текстуры (normalMap=true → тип NormalMap, linear).</summary>
-        static Texture2D LoadHpTexture(string path, bool normalMap)
+        /// <summary>Импортирует/правит PNG из ModelsHP (normalMap=true → NormalMap, linear). Возвращает текстуру.</summary>
+        static Texture2D EnsureTexture(string path, bool normalMap, ref int fixedCount)
         {
             if (!File.Exists(path)) return null;
             var importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer == null)
+            {
+                AssetDatabase.ImportAsset(path);
+                importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            }
             if (importer != null)
             {
                 bool dirty = false;
-                if (normalMap && importer.textureType != TextureImporterType.NormalMap)
-                { importer.textureType = TextureImporterType.NormalMap; dirty = true; }
-                if (!normalMap && importer.textureType != TextureImporterType.Default)
-                { importer.textureType = TextureImporterType.Default; dirty = true; }
+                var wantType = normalMap ? TextureImporterType.NormalMap : TextureImporterType.Default;
+                if (importer.textureType != wantType) { importer.textureType = wantType; dirty = true; }
                 if (importer.sRGBTexture == normalMap) { importer.sRGBTexture = !normalMap; dirty = true; }
-                if (dirty) importer.SaveAndReimport();
+                if (dirty) { importer.SaveAndReimport(); fixedCount++; }
             }
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+
+        /// <summary>Загружает материал-ассет или создаёт новый на диске (перечитывается поверх при повторах).</summary>
+        static Material GetOrCreateMaterial(string matPath, Shader shader)
+        {
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
+            if (mat != null)
+            {
+                if (mat.shader != shader) mat.shader = shader;
+                return mat;
+            }
+            mat = new Material(shader);
+            AssetDatabase.CreateAsset(mat, matPath);
+            return mat;
+        }
+
+        /// <summary>Вешает HP-материал на ВСЕ рендереры инстанса: LOD0 + LOD1 + LOD2.</summary>
+        static void ApplyHpMaterial(GameObject instance, Material mat)
+        {
+            var renderers = instance.GetComponentsInChildren<Renderer>(true);
+            for (int i = 0; i < renderers.Length; i++)
+                renderers[i].sharedMaterial = mat;
         }
 
         /// <summary>Смешивает <имя>_color.png с <имя>_ao.png (AO вшивается в альбедо: floor 0.55) → <имя>_albedo.png.</summary>
@@ -207,7 +262,7 @@ namespace Subsistence.EditorTools
             return tex.LoadImage(File.ReadAllBytes(path)) ? tex : null;
         }
 
-        /// <summary>LODGroup: LOD0 = сама модель, LOD1/LOD2 из <имя>_lod1/_lod2.fbx (60/30/10 % экрана).</summary>
+        /// <summary>LODGroup: LOD0 = сама модель, LOD1/LOD2 из <имя>_lod1/_lod2.fbx (50/22/8 % экрана).</summary>
         static void SetupLodGroup(GameObject instance, string name, string dir)
         {
             GameObject lod1 = LoadHpModel($"{dir}/{name}_lod1.fbx");
@@ -223,11 +278,11 @@ namespace Subsistence.EditorTools
             {
                 var go2 = Object.Instantiate(lod2, instance.transform); go2.name = "LOD2";
                 var rs2 = go2.GetComponentsInChildren<Renderer>(true);
-                lods = new[] { new LOD(0.60f, own), new LOD(0.30f, rs1), new LOD(0.10f, rs2) };
+                lods = new[] { new LOD(0.50f, own), new LOD(0.22f, rs1), new LOD(0.08f, rs2) };
             }
             else
             {
-                lods = new[] { new LOD(0.60f, own), new LOD(0.15f, rs1) };
+                lods = new[] { new LOD(0.50f, own), new LOD(0.15f, rs1) };
             }
             var group = instance.GetComponent<LODGroup>();
             if (group == null) group = instance.AddComponent<LODGroup>();

@@ -200,7 +200,10 @@
 Листы: `_hp_sheet_monsters.png`, `_hp_sheet_weapons.png`, `_hp_sheet_characters.png`, `_hp_sheet_items.png`, `_hp_sheet_build.png`, `_hp_sheet_deployables.png`, `_hp_sheet_props.png`.
 Карты 2K у крупных (11а): BD_elevator_car, PR_reactor, PR_vending_machine, PR_scooter, PR_minecart, PR_loot_cart; остальным пропсам 1K.
 
-### Хвосты 40а / смежные задачи
-- W_rocket_launcher: перегенерить LOD2 (топология трубы не ужался).
-- 24а: иконки 256px из HP-рендеров — пайплайн готов (tools/blender/icons_hp.py + tools/make_icons_256.py).
-- 20б: лёгкий апгрейд деталей персонажей; 25а: 14 скинов; 39а: синтез .wav.
+### Хвосты 40а / смежные задачи — все закрыты (18.09, сборка 1.1.0)
+- W_rocket_launcher: LOD1/LOD2 ПОЧИНЕНЫ — меш состоял из разорванных оболочек (1245 дублей вершин);
+  make_lod теперь сам сваривает и пережимает, LOD2 ≈ 550 трис.
+- 24а ✅ иконки 256px: 66 из HP-рендеров + 114 апскейл (см. docs/previews/_icons256_3d.png).
+- 20б ✅ хазмат/торговец: органика 0.030 + слой строчек, ребейк 2K.
+- 25а ✅ скины: 10 рендеров 2K + 4 карточки, магазин с превью и ↑↓/Enter (Skins.cs).
+- 37в/39а ✅ звук: 11 .wav (лупы L0/L3/L37 + выстрелы 9 стволов + взрыв), ProcAudio сэмплы-приоритет.

@@ -316,11 +316,11 @@ namespace Subsistence.World
                     mb.AddFloor(x0, z0, x1, z1, 0f, true);
                     mb.AddFloor(x0, z0, x1, z1, h, false);
 
-                    // стены там, где сосед — «камень»
-                    if (x == 0 || solid[x - 1, z]) mb.AddWallSlab(new Vector3(x0, 0, z0), new Vector3(x0, 0, z1), 0f, h, 0.25f);
-                    if (x == s.gridWidth - 1 || solid[x + 1, z]) mb.AddWallSlab(new Vector3(x1, 0, z0), new Vector3(x1, 0, z1), 0f, h, 0.25f);
-                    if (z == 0 || solid[x, z - 1]) mb.AddWallSlab(new Vector3(x0, 0, z0), new Vector3(x1, 0, z0), 0f, h, 0.25f);
-                    if (z == s.gridDepth - 1 || solid[x, z + 1]) mb.AddWallSlab(new Vector3(x0, 0, z1), new Vector3(x1, 0, z1), 0f, h, 0.25f);
+                    // стены там, где сосед — «камень» (0.5 м — массивные, не «картон»)
+                    if (x == 0 || solid[x - 1, z]) mb.AddWallSlab(new Vector3(x0, 0, z0), new Vector3(x0, 0, z1), 0f, h, 0.5f);
+                    if (x == s.gridWidth - 1 || solid[x + 1, z]) mb.AddWallSlab(new Vector3(x1, 0, z0), new Vector3(x1, 0, z1), 0f, h, 0.5f);
+                    if (z == 0 || solid[x, z - 1]) mb.AddWallSlab(new Vector3(x0, 0, z0), new Vector3(x1, 0, z0), 0f, h, 0.5f);
+                    if (z == s.gridDepth - 1 || solid[x, z + 1]) mb.AddWallSlab(new Vector3(x0, 0, z1), new Vector3(x1, 0, z1), 0f, h, 0.5f);
 
                     // узел графа для ИИ: центр клетки (каждые 2 клетки — чтобы граф не раздувался)
                     if (x % 3 == 0 && z % 3 == 0)   // 1×1 км: узлы реже, иначе граф слишком тяжёлый

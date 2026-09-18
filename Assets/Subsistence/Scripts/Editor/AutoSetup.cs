@@ -33,7 +33,13 @@ namespace Subsistence.EditorTools
         {
             try
             {
-                if (File.Exists(MarkerPath)) return;                  // уже настроено
+                // Маркер хранит ВЕРСИЮ проекта (из VERSION.txt). Не совпала — это
+                // обновление, распакованное поверх старой папки: пересобираем всё
+                // заново (префабы моделей из новых FBX, сцену, материалы).
+                // Раньше маркер был «настроено один раз» — из-за этого после замены
+                // файлов старые тонкие префабы оставались и «ничего не менялось».
+                string version = ReadProjectVersion();
+                if (File.Exists(MarkerPath) && File.ReadAllText(MarkerPath).Trim() == version) return;
                 if (EditorApplication.isCompiling || EditorApplication.isUpdating)
                 {
                     EditorApplication.delayCall += TryAutoRun;         // ждём импорт/компиляцию
@@ -45,10 +51,11 @@ namespace Subsistence.EditorTools
                     return;
                 }
 
-                Debug.Log("<color=#39ff6a>[Subsistence]</color> первая настройка проекта — " +
-                          "идёт автоматически (~1-3 минуты, Unity может подтормаживать)...");
+                Debug.Log("<color=#39ff6a>[Subsistence]</color> настройка проекта " +
+                          (File.Exists(MarkerPath) ? $"ОБНОВЛЕНИЕ до {version}" : "первая") +
+                          " — идёт автоматически (~1-3 минуты, Unity может подтормаживать)...");
                 RunAll();
-                File.WriteAllText(MarkerPath, DateTime.Now.ToString("u"));
+                File.WriteAllText(MarkerPath, version);
                 AssetDatabase.Refresh();
             }
             catch (Exception e)
@@ -56,6 +63,22 @@ namespace Subsistence.EditorTools
                 Debug.LogWarning("[Subsistence] автонастройка прервалась: " + e.Message +
                                  "\nЗапусти вручную: меню Subsistence → «0. Автонастройка проекта».");
             }
+        }
+
+        /// <summary>Версия из VERSION.txt в корне проекта («SUBSISTENCE 1.1.7-alpha …» → «1.1.7-alpha»).</summary>
+        static string ReadProjectVersion()
+        {
+            try
+            {
+                string[] lines = File.ReadAllLines("VERSION.txt");
+                if (lines.Length > 1 && lines[0].StartsWith("SUBSISTENCE"))
+                {
+                    var parts = lines[0].Split(' ');
+                    if (parts.Length > 1) return parts[1].Trim();
+                }
+            }
+            catch { /* VERSION.txt нет — постоянный маркер, чтобы не перенастраиваться при каждом открытии */ }
+            return "no-version";
         }
 
         [MenuItem("Subsistence/0. Автонастройка проекта", priority = 0)]

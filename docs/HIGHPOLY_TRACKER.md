@@ -34,52 +34,173 @@
 ## Спринт 1.3 — Персонажи и предметы
 | Модель | Статус | Заметка |
 |---|---|---|
-| CH_hazmat_suit | ⬜ очередь | лёгкий апгрейд деталей (20б) |
-| CH_trader_npc | ⬜ очередь | лёгкий апгрейд деталей (20б) |
-| IT_ammo_556 | ⬜ очередь | 1K-нормали (11а) |
-| IT_ammo_shell | ⬜ очередь | 1K-нормали (11а) |
-| IT_antidote | ⬜ очередь | 1K-нормали (11а) |
-| IT_apple | ⬜ очередь | 1K-нормали (11а) |
-| IT_arrow_bundle | ⬜ очередь | 1K-нормали (11а) |
-| IT_bandage | ⬜ очередь | 1K-нормали (11а) |
-| IT_boots_hide | ⬜ очередь | 1K-нормали (11а) |
-| IT_boots_rubber | ⬜ очередь | 1K-нормали (11а) |
-| IT_bucket | ⬜ очередь | 1K-нормали (11а) |
-| IT_can_beans | ⬜ очередь | 1K-нормали (11а) |
-| IT_can_tuna | ⬜ очередь | 1K-нормали (11а) |
-| IT_chlorine | ⬜ очередь | 1K-нормали (11а) |
-| IT_chocolate | ⬜ очередь | 1K-нормали (11а) |
-| IT_cloth_roll | ⬜ очередь | 1K-нормали (11а) |
-| IT_diving_mask | ⬜ очередь | 1K-нормали (11а) |
-| IT_duct_tape | ⬜ очередь | 1K-нормали (11а) |
-| IT_flashlight | ⬜ очередь | 1K-нормали (11а) |
-| IT_flippers | ⬜ очередь | 1K-нормали (11а) |
-| IT_fuse_hi | ⬜ очередь | 1K-нормали (11а) |
-| IT_geiger | ⬜ очередь | 1K-нормали (11а) |
-| IT_glow_mushroom | ⬜ очередь | 1K-нормали (11а) |
-| IT_hide_vest | ⬜ очередь | 1K-нормали (11а) |
-| IT_lamp_portable | ⬜ очередь | 1K-нормали (11а) |
-| IT_meat_raw | ⬜ очередь | 1K-нормали (11а) |
-| IT_medkit_large | ⬜ очередь | 1K-нормали (11а) |
-| IT_oxygen_tank | ⬜ очередь | 1K-нормали (11а) |
-| IT_respirator | ⬜ очередь | 1K-нормали (11а) |
-| IT_rubber_gloves | ⬜ очередь | 1K-нормали (11а) |
-| IT_scrap_pile | ⬜ очередь | 1K-нормали (11а) |
-| IT_stone_pile | ⬜ очередь | 1K-нормали (11а) |
-| IT_sulfur_lump | ⬜ очередь | 1K-нормали (11а) |
-| IT_torch_lantern | ⬜ очередь | 1K-нормали (11а) |
-| IT_water_bottle | ⬜ очередь | 1K-нормали (11а) |
-| IT_wood_chestplate | ⬜ очередь | 1K-нормали (11а) |
-| IT_wood_helmet | ⬜ очередь | 1K-нормали (11а) |
-| IT_wood_pile | ⬜ очередь | 1K-нормали (11а) |
-| IT_wrench_insulated | ⬜ очередь | 1K-нормали (11а) |
+| CH_hazmat_suit | ✅ очередь | лёгкий апгрейд деталей (20б) |
+| CH_trader_npc | ✅ очередь | лёгкий апгрейд деталей (20б) |
+| IT_ammo_556 | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_ammo_shell | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_antidote | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_apple | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_arrow_bundle | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_bandage | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_boots_hide | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_boots_rubber | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_bucket | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_can_beans | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_can_tuna | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_chlorine | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_chocolate | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_cloth_roll | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_diving_mask | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_duct_tape | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_flashlight | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_flippers | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_fuse_hi | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_geiger | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_glow_mushroom | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_hide_vest | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_lamp_portable | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_meat_raw | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_medkit_large | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_oxygen_tank | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_respirator | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_rubber_gloves | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_scrap_pile | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_stone_pile | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_sulfur_lump | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_torch_lantern | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_water_bottle | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_wood_chestplate | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_wood_helmet | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_wood_pile | ✅ готово | карты 1K + фаски/органика + 2 LOD |
+| IT_wrench_insulated | ✅ готово | карты 1K + фаски/органика + 2 LOD |
 
-## Спринт 1.4 — Пропсы (BD_/DD_/PR_/LV_)
-| Категория | Кол-во | Статус |
+## Спринт 1.4 — Пропсы (103 элемента)
+
+### BD — Стройка (Rust-style база) (18)
+| Модель | Статус | Заметка |
 |---|---|---|
-| BD_* (стройка) | 18 | ⬜ очередь |
-| DD_* (деплои) | 34 | ⬜ очередь |
-| PR_* (пропсы/транспорт/лут) | 24 | ⬜ очередь |
-| прочие | 27 | ⬜ очередь |
+| BD_door_armored | ✅ готово | карты 1K + фаски + LOD |
+| BD_door_metal | ✅ готово | карты 1K + фаски + LOD |
+| BD_doorway | ✅ готово | карты 1K + фаски + LOD |
+| BD_elevator_car | ✅ готово | HP 33.6k · карты **2K** + фаски + LOD |
+| BD_floor | ✅ готово | карты 1K + фаски + LOD |
+| BD_floor_tri | ✅ готово | карты 1K + фаски + LOD |
+| BD_foundation | ✅ готово | карты 1K + фаски + LOD |
+| BD_foundation_tri | ✅ готово | карты 1K + фаски + LOD |
+| BD_high_wall | ✅ готово | карты 1K + фаски + LOD |
+| BD_pillar | ✅ готово | карты 1K + фаски + LOD |
+| BD_railing | ✅ готово | карты 1K + фаски + LOD |
+| BD_ramp | ✅ готово | карты 1K + фаски + LOD |
+| BD_ramp_corner | ✅ готово | карты 1K + фаски + LOD |
+| BD_roof | ✅ готово | карты 1K + фаски + LOD |
+| BD_shutters | ✅ готово | карты 1K + фаски + LOD |
+| BD_stairs | ✅ готово | карты 1K + фаски + LOD |
+| BD_wall | ✅ готово | карты 1K + фаски + LOD |
+| BD_window | ✅ готово | карты 1K + фаски + LOD |
 
-**Итого: 159 моделей.** Готово: **16/159** (монстры 7 + оружие 9). Листы: `_hp_sheet_monsters.png`, `_hp_sheet_weapons.png`. Дальше по 14а: персонажи (хазмат, торговец, тело игрока) и предметы.
+### DD — Деплой-объекты (34)
+| Модель | Статус | Заметка |
+|---|---|---|
+| DD_autoturret | ✅ готово | карты 1K + фаски + LOD |
+| DD_barricade_concrete | ✅ готово | карты 1K + фаски + LOD |
+| DD_barricade_metal | ✅ готово | карты 1K + фаски + LOD |
+| DD_bed | ✅ готово | карты 1K + фаски + LOD |
+| DD_cupboard | ✅ готово | карты 1K + фаски + LOD |
+| DD_door_armored | ✅ готово | карты 1K + фаски + LOD |
+| DD_door_metal | ✅ готово | карты 1K + фаски + LOD |
+| DD_door_wood | ✅ готово | карты 1K + фаски + LOD |
+| DD_furnace | ✅ готово | карты 1K + фаски + LOD |
+| DD_furnace_large | ✅ готово | карты 1K + фаски + LOD |
+| DD_lock_code | ✅ готово | карты 1K + фаски + LOD |
+| DD_lock_key | ✅ готово | карты 1K + фаски + LOD |
+| DD_purifier | ✅ готово | карты 1K + фаски + LOD |
+| DD_repair_bench | ✅ готово | карты 1K + фаски + LOD |
+| DD_research_table | ✅ готово | карты 1K + фаски + LOD |
+| DD_samsite | ✅ готово | карты 1K + фаски + LOD |
+| DD_sign | ✅ готово | карты 1K + фаски + LOD |
+| DD_sleepingbag | ✅ готово | карты 1K + фаски + LOD |
+| DD_trap_bear | ✅ готово | карты 1K + фаски + LOD |
+| DD_trap_spikes | ✅ готово | карты 1K + фаски + LOD |
+| DD_wind_generator | ✅ готово | карты 1K + фаски + LOD |
+| DD_workbench | ✅ готово | карты 1K + фаски + LOD |
+| DD_workbench1 | ✅ готово | карты 1K + фаски + LOD |
+| DD_workbench1_L0 | ✅ готово | карты 1K + фаски + LOD |
+| DD_workbench1_L3 | ✅ готово | карты 1K + фаски + LOD |
+| DD_workbench1_L37 | ✅ готово | карты 1K + фаски + LOD |
+| DD_workbench2 | ✅ готово | карты 1K + фаски + LOD |
+| DD_workbench2_L0 | ✅ готово | карты 1K + фаски + LOD |
+| DD_workbench2_L3 | ✅ готово | карты 1K + фаски + LOD |
+| DD_workbench2_L37 | ✅ готово | карты 1K + фаски + LOD |
+| DD_workbench3 | ✅ готово | карты 1K + фаски + LOD |
+| DD_workbench3_L0 | ✅ готово | карты 1K + фаски + LOD |
+| DD_workbench3_L3 | ✅ готово | карты 1K + фаски + LOD |
+| DD_workbench3_L37 | ✅ готово | карты 1K + фаски + LOD |
+
+### LV — Декор уровней (Poolrooms) (27)
+| Модель | Статус | Заметка |
+|---|---|---|
+| LV_breaker_cabinet | ✅ готово | карты 1K + фаски + LOD |
+| LV_cable_spool | ✅ готово | карты 1K + фаски + LOD |
+| LV_cardboard_stack | ✅ готово | карты 1K + фаски + LOD |
+| LV_ceiling_light | ✅ готово | карты 1K + фаски + LOD |
+| LV_control_panel | ✅ готово | карты 1K + фаски + LOD |
+| LV_coolant_tank | ✅ готово | карты 1K + фаски + LOD |
+| LV_corridor_panel | ✅ готово | карты 1K + фаски + LOD |
+| LV_deck_chair | ✅ готово | карты 1K + фаски + LOD |
+| LV_desk_fan | ✅ готово | карты 1K + фаски + LOD |
+| LV_exit_sign | ✅ готово | карты 1K + фаски + LOD |
+| LV_filing_cabinet | ✅ готово | карты 1K + фаски + LOD |
+| LV_inflatable_ring | ✅ готово | карты 1K + фаски + LOD |
+| LV_lifebuoy | ✅ готово | карты 1K + фаски + LOD |
+| LV_mop_bucket | ✅ готово | карты 1K + фаски + LOD |
+| LV_office_chair | ✅ готово | карты 1K + фаски + LOD |
+| LV_pipe_flange | ✅ готово | карты 1K + фаски + LOD |
+| LV_pipe_valve | ✅ готово | карты 1K + фаски + LOD |
+| LV_pool_ladder | ✅ готово | карты 1K + фаски + LOD |
+| LV_pool_pump | ✅ готово | карты 1K + фаски + LOD |
+| LV_pool_tile_panel | ✅ готово | карты 1K + фаски + LOD |
+| LV_shower_head | ✅ готово | карты 1K + фаски + LOD |
+| LV_transformer | ✅ готово | карты 1K + фаски + LOD |
+| LV_turbine_housing | ✅ готово | карты 1K + фаски + LOD |
+| LV_valve_wheel | ✅ готово | карты 1K + фаски + LOD |
+| LV_warning_sign | ✅ готово | карты 1K + фаски + LOD |
+| LV_water_cooler | ✅ готово | карты 1K + фаски + LOD |
+| LV_wet_floor_sign | ✅ готово | карты 1K + фаски + LOD |
+
+### PR — Пропсы/транспорт/лут (24)
+| Модель | Статус | Заметка |
+|---|---|---|
+| PR_airdrop_crate | ✅ готово | карты 1K + фаски + LOD |
+| PR_barrel | ✅ готово | карты 1K + фаски + LOD |
+| PR_barrel_radioactive | ✅ готово | карты 1K + фаски + LOD |
+| PR_carpet_tile_L0 | ✅ готово | карты 1K + фаски + LOD |
+| PR_crate_wood | ✅ готово | карты 1K + фаски + LOD |
+| PR_electrical_panel | ✅ готово | карты 1K + фаски + LOD |
+| PR_filing_cabinet | ✅ готово | карты 1K + фаски + LOD |
+| PR_lamp_panel_L0 | ✅ готово | карты 1K + фаски + LOD |
+| PR_locker | ✅ готово | карты 1K + фаски + LOD |
+| PR_loot_bag | ✅ готово | карты 1K + фаски + LOD |
+| PR_loot_cart | ✅ готово | HP 34.5k · карты **2K** + фаски + LOD |
+| PR_medical_cabinet | ✅ готово | карты 1K + фаски + LOD |
+| PR_minecart | ✅ готово | HP 43.5k · карты **2K** + фаски + LOD |
+| PR_pipe_kit | ✅ готово | карты 1K + фаски + LOD |
+| PR_pool_tile_block | ✅ готово | карты 1K + фаски + LOD |
+| PR_reactor | ✅ готово | HP  · карты **2K** + фаски + LOD |
+| PR_safe_box | ✅ готово | карты 1K + фаски + LOD |
+| PR_scooter | ✅ готово | HP 40.8k · карты **2K** + фаски + LOD |
+| PR_supply_crate | ✅ готово | карты 1K + фаски + LOD |
+| PR_toolbox | ✅ готово | карты 1K + фаски + LOD |
+| PR_transformer | ✅ готово | карты 1K + фаски + LOD |
+| PR_turbine | ✅ готово | карты 1K + фаски + LOD |
+| PR_vending_machine | ✅ готово | HP 46.5k · карты **2K** + фаски + LOD |
+| PR_wall_panel_L0 | ✅ готово | карты 1K + фаски + LOD |
+
+**Итого: 159 моделей. Готово: 159/159 — хай-поли пасс 40а ЗАВЕРШЁН (перегенерирован после двух сбоев снапшота).** 🎉
+(монстры 8 · оружие 9 · персонажи 2 · предметы 37 · стройка 18 · деплои 34 · декор уровней 27 · пропсы 24)
+Листы: `_hp_sheet_monsters.png`, `_hp_sheet_weapons.png`, `_hp_sheet_characters.png`, `_hp_sheet_items.png`, `_hp_sheet_build.png`, `_hp_sheet_deployables.png`, `_hp_sheet_props.png`.
+Карты 2K у крупных (11а): BD_elevator_car, PR_reactor, PR_vending_machine, PR_scooter, PR_minecart, PR_loot_cart; остальным пропсам 1K.
+
+### Хвосты 40а / смежные задачи
+- W_rocket_launcher: перегенерить LOD2 (топология трубы не ужался).
+- 24а: иконки 256px из HP-рендеров — пайплайн готов (tools/blender/icons_hp.py + tools/make_icons_256.py).
+- 20б: лёгкий апгрейд деталей персонажей; 25а: 14 скинов; 39а: синтез .wav.

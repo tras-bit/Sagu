@@ -481,7 +481,7 @@ namespace Subsistence.EditorTools
                     BindingFlags.NonPublic | BindingFlags.Instance);
                 build.Invoke(bc, null);
                 canvas = typeof(Subsistence.UI.BootConsole)
-                         .GetProperty("Canvas", BindingFlags.Public | BindingFlags.Instance)
+                         .GetProperty("MenuCanvas", BindingFlags.Public | BindingFlags.Instance)
                          ?.GetValue(bc) as Canvas;
                 return bc.MenuSelfCheck();
             }

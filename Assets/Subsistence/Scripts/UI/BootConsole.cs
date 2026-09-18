@@ -233,7 +233,7 @@ namespace Subsistence.UI
         }
 
         /// <summary>Канвас меню (для редакторского теста «Subsistence → 12»).</summary>
-        public Canvas Canvas => _canvas;
+        public Canvas MenuCanvas => _canvas;
 
         /// <summary>
         /// Самопроверка меню: EventSystem (иначе кнопки не жмутся), канвас с raycaster'ом,

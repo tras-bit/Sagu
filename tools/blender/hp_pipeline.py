@@ -218,6 +218,21 @@ def make_lod(src_obj, name, ratio):
     with bpy.context.temp_override(object=o, active_object=o, selected_objects=[o]):
         bpy.ops.object.modifier_apply(modifier="lod")
     t = sum(len(p.vertices) - 2 for p in o.data.polygons)
+    src_t = sum(len(p.vertices) - 2 for p in src_obj.data.polygons)
+    if t > src_t * 0.75:   # не ужался → разорванные оболочки (труба РПГ): сварить и повторить
+        bpy.context.view_layer.objects.active = o
+        o.select_set(True)
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.mesh.select_all(action="SELECT")
+        bpy.ops.mesh.remove_doubles(threshold=1e-5)
+        bpy.ops.object.mode_set(mode="OBJECT")
+        d = o.modifiers.new("lod2", "DECIMATE")
+        d.ratio = ratio
+        with bpy.context.temp_override(object=o, active_object=o, selected_objects=[o]):
+            bpy.ops.object.modifier_apply(modifier="lod2")
+        t2 = sum(len(p.vertices) - 2 for p in o.data.polygons)
+        print(f"[hp] {name}: decimate упёрся ({t} трис) — сварил оболочки → {t2} трис")
+        t = t2
     print(f"[hp] {name}: {t} трис")
     return o
 

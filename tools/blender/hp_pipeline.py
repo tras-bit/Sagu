@@ -215,6 +215,7 @@ def make_lod(src_obj, name, ratio):
     bpy.context.collection.objects.link(o)
     d = o.modifiers.new("lod", "DECIMATE")
     d.ratio = ratio
+    d.delimit = {"UV"}          # не рвать UV-острова (текстуры не «перемешиваются»)
     with bpy.context.temp_override(object=o, active_object=o, selected_objects=[o]):
         bpy.ops.object.modifier_apply(modifier="lod")
     t = sum(len(p.vertices) - 2 for p in o.data.polygons)
@@ -228,6 +229,7 @@ def make_lod(src_obj, name, ratio):
         bpy.ops.object.mode_set(mode="OBJECT")
         d = o.modifiers.new("lod2", "DECIMATE")
         d.ratio = ratio
+        d.delimit = {"UV"}
         with bpy.context.temp_override(object=o, active_object=o, selected_objects=[o]):
             bpy.ops.object.modifier_apply(modifier="lod2")
         t2 = sum(len(p.vertices) - 2 for p in o.data.polygons)

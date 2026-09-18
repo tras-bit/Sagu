@@ -11,7 +11,7 @@ SUBSISTENCE — models_buildpieces.py
   BD_railing         — перила (3 м, стойки + две перекладины + балясины)
   BD_shutters        — ставни (рама + ламели, закрывают проём 2.2×2.2)
 
-Сетка стройки — 3 м (BuildController.GridSize), стена 3 м в высоту (как BD_wall 3.0×0.16×3.0).
+Сетка стройки — 3 м (BuildController.GridSize), стена 3 м в высоту (как BD_wall 3.0×0.40×3.0).
 Все детали — в абсолютных координатах.
 
 Запуск: python3 tools/bpy_run.py tools/blender/models_buildpieces.py [--no-render]
@@ -23,7 +23,7 @@ import subs_common as S
 import subs_shapes as K
 
 OUT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..",
-      "UnityProject", "Assets", "Subsistence", "Models", "Props"))
+      "Assets", "Subsistence", "Models", "Props"))
 PREV = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "docs", "previews"))
 R = math.radians
 G = 3.0            # размер клетки
@@ -163,25 +163,25 @@ def build_ramp_corner():
 
 
 def build_high_wall():
-    """Высокая стена 3×6: две секции по 3 м, два пояса жёсткости, стойки."""
+    """Высокая стена 3×6: две секции по 3 м, два пояса жёсткости, стойки. Толщина 0.42 (была 0.18)."""
     m = mats(); p = []
     p.append(K.loft_z("BD_high_wall", [
-        (0.0, K.ring_xy(G, 0.18, 0.0, 0.0)),
-        (2.9, K.ring_xy(G, 0.18, 0.0, 0.0))], mat=m["wood"], smooth=False))
+        (0.0, K.ring_xy(G, 0.42, 0.0, 0.0)),
+        (2.9, K.ring_xy(G, 0.42, 0.0, 0.0))], mat=m["wood"], smooth=False))
     p.append(K.loft_z("BD_high_wall_up", [
-        (2.9, K.ring_xy(G, 0.18, 0.0, 0.0)),
-        (5.8, K.ring_xy(G, 0.18, 0.0, 0.0))], mat=m["wood_dark"], smooth=False))
-    for z in (0.06, 2.84, 5.80):
+        (2.9, K.ring_xy(G, 0.42, 0.0, 0.0)),
+        (5.8, K.ring_xy(G, 0.42, 0.0, 0.0))], mat=m["wood_dark"], smooth=False))
+    for z in (0.08, 2.82, 5.80):
         p.append(K.loft_z(f"BD_high_wall_belt{int(z*100)}", [
-            (z - 0.07, K.ring_xy(G, 0.24, 0.0, 0.0)),
-            (z + 0.07, K.ring_xy(G, 0.24, 0.0, 0.0))], mat=m["wood_dark"], smooth=False))
+            (z - 0.08, K.ring_xy(G, 0.52, 0.0, 0.0)),
+            (z + 0.08, K.ring_xy(G, 0.52, 0.0, 0.0))], mat=m["wood_dark"], smooth=False))
     for x in (-1.0, 0.0, 1.0):
         p.append(K.loft_z(f"BD_high_wall_post{int(x*10)}", [
-            (0.0, K.ring_xy(0.14, 0.22, x, 0.0)),
-            (5.86, K.ring_xy(0.14, 0.22, x, 0.0))], mat=m["wood_dark"], smooth=False))
+            (0.0, K.ring_xy(0.18, 0.48, x, 0.0)),
+            (5.84, K.ring_xy(0.18, 0.48, x, 0.0))], mat=m["wood_dark"], smooth=False))
     p.append(K.loft_z("BD_high_wall_cap", [
-        (5.86, K.ring_xy(G, 0.26, 0.0, 0.0)),
-        (5.98, K.ring_xy(G, 0.28, 0.0, 0.0))], mat=m["wood"], smooth=False))
+        (5.84, K.ring_xy(G, 0.52, 0.0, 0.0)),
+        (5.98, K.ring_xy(G, 0.54, 0.0, 0.0))], mat=m["wood"], smooth=False))
     return p
 
 
@@ -296,5 +296,5 @@ if __name__ == "__main__":
     only = None
     if "--only" in argv:
         i = argv.index("--only")
-        only = set(argv[i + 1:]) or None
+        only = set(a for a in argv[i + 1:] if not a.startswith("--")) or None
     build_all(render="--no-render" not in argv, only=only)

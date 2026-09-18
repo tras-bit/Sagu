@@ -45,7 +45,7 @@ namespace Subsistence.Building
     {
         public float leafWidth = 1.0f;
         public float leafHeight = 2.05f;
-        public float leafThickness = 0.16f;
+        public float leafThickness = 0.20f;
         public float openAngle = 94f;
         public float swingSpeed = 260f;
 
@@ -90,10 +90,10 @@ namespace Subsistence.Building
 
             switch (itemId)
             {
-                case "door.hinged.metal": health = 250f; leafThickness = 0.20f; break;   // Rust: 250 HP
-                case "door.hinged.toptier": health = 800f; leafThickness = 0.26f; break; // Rust: 800 HP
-                case "door.double.hinged.metal": health = 500f; leafWidth = 2.0f; leafThickness = 0.20f; break;
-                default: health = 200f; leafThickness = 0.16f; break;                    // деревянная: 200 HP
+                case "door.hinged.metal": health = 250f; leafThickness = 0.24f; break;   // Rust: 250 HP
+                case "door.hinged.toptier": health = 800f; leafThickness = 0.30f; break; // Rust: 800 HP
+                case "door.double.hinged.metal": health = 500f; leafWidth = 2.0f; leafThickness = 0.24f; break;
+                default: health = 200f; leafThickness = 0.20f; break;                    // деревянная: 200 HP
             }
 
             BuildLeaf();

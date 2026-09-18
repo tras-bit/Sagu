@@ -14,7 +14,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import subs_common as S
 
 OUT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..",
-      "UnityProject", "Assets", "Subsistence", "Models", "Props"))
+      "Assets", "Subsistence", "Models", "Props"))
 
 
 # ------------------------------------------------------------------ Level 0
@@ -184,23 +184,23 @@ def transformer(metal, copper, hazard):
 def build_kit(wood, stone, metal, hqm):
     """Базовые формы строительного кита (тиры — назначением материала в Unity)."""
     objs = {}
-    # стена 3×3 с рёбрами
-    p = [S.box("BD_wall", (3.0, 0.16, 3.0), loc=(0, 0, 1.5), mat=wood),
-         S.box("BD_wall_rib_top", (3.0, 0.20, 0.12), loc=(0, 0, 2.94), mat=wood),
-         S.box("BD_wall_rib_bot", (3.0, 0.20, 0.12), loc=(0, 0, 0.06), mat=wood)]
+    # стена 3×3 с рёбрами — ТОЛСТАЯ (0.40 м, была картонная 0.16)
+    p = [S.box("BD_wall", (3.0, 0.40, 3.0), loc=(0, 0, 1.5), mat=wood),
+         S.box("BD_wall_rib_top", (3.0, 0.48, 0.16), loc=(0, 0, 2.92), mat=wood),
+         S.box("BD_wall_rib_bot", (3.0, 0.48, 0.16), loc=(0, 0, 0.08), mat=wood)]
     for i in range(3):
-        p.append(S.box(f"BD_wall_plank{i}", (0.98, 0.19, 2.8), loc=(-1.0 + i * 1.0, 0, 1.5), mat=wood))
+        p.append(S.box(f"BD_wall_plank{i}", (0.98, 0.44, 2.72), loc=(-1.0 + i * 1.0, 0, 1.5), mat=wood))
     objs["BD_wall"] = p
-    # дверной проём (рама + перемычка)
-    p = [S.box("BD_doorway_l", (0.35, 0.16, 3.0), loc=(-1.32, 0, 1.5), mat=wood),
-         S.box("BD_doorway_r", (0.35, 0.16, 3.0), loc=(1.32, 0, 1.5), mat=wood),
-         S.box("BD_doorway_top", (3.0, 0.16, 0.55), loc=(0, 0, 2.72), mat=wood)]
+    # дверной проём (рама + перемычка) — той же толщины, что стена
+    p = [S.box("BD_doorway_l", (0.35, 0.40, 3.0), loc=(-1.32, 0, 1.5), mat=wood),
+         S.box("BD_doorway_r", (0.35, 0.40, 3.0), loc=(1.32, 0, 1.5), mat=wood),
+         S.box("BD_doorway_top", (3.0, 0.40, 0.55), loc=(0, 0, 2.72), mat=wood)]
     objs["BD_doorway"] = p
-    # окно (нижний/верхний пояс)
-    p = [S.box("BD_window_bot", (3.0, 0.16, 1.0), loc=(0, 0, 0.5), mat=wood),
-         S.box("BD_window_top", (3.0, 0.16, 0.8), loc=(0, 0, 2.6), mat=wood),
-         S.box("BD_window_l", (0.4, 0.16, 3.0), loc=(-1.3, 0, 1.5), mat=wood),
-         S.box("BD_window_r", (0.4, 0.16, 3.0), loc=(1.3, 0, 1.5), mat=wood)]
+    # окно (нижний/верхний пояс) — той же толщины, что стена
+    p = [S.box("BD_window_bot", (3.0, 0.40, 1.0), loc=(0, 0, 0.5), mat=wood),
+         S.box("BD_window_top", (3.0, 0.40, 0.8), loc=(0, 0, 2.6), mat=wood),
+         S.box("BD_window_l", (0.4, 0.40, 3.0), loc=(-1.3, 0, 1.5), mat=wood),
+         S.box("BD_window_r", (0.4, 0.40, 3.0), loc=(1.3, 0, 1.5), mat=wood)]
     objs["BD_window"] = p
     # фундамент 3×3 (с «шипами» под следующий этаж)
     p = [S.box("BD_foundation", (3.0, 0.4, 3.0), loc=(0, 0, -0.2), mat=stone)]
@@ -315,7 +315,7 @@ def build_all(render=True, only=None):
         ("PR_loot_bag", lambda: loot_bag(M["cloth"], M["cloth_dark"], M["strap"], M["metal"], M["paper"])),
     ]
     if only:
-        jobs = [j for j in jobs if j[0] == only]
+        jobs = [j for j in jobs if j[0] in only]
     total = 0
     for name, fn in jobs:
         S.clean_scene()
@@ -335,14 +335,13 @@ def build_all(render=True, only=None):
         if render:
             S.render_fit(os.path.join(render_dir, name + ".png"), [joined], samples=24, res=(700, 520), fov_deg=34)
 
-    # строительный кит (каждая деталь отдельным файлом) — только полной сборкой
-    if not only:
-        S.clean_scene()
-        M = mats()
-        kit = build_kit(M["wood"], M["stone"], M["metal"], M["hqm"])
-        if only in kit:
-            kit = {only: kit[only]}
-        for name, parts in kit.items():
+    # строительный кит (каждая деталь отдельным файлом); --only фильтрует и кит
+    S.clean_scene()
+    M = mats()
+    kit = build_kit(M["wood"], M["stone"], M["metal"], M["hqm"])
+    if only:
+        kit = {k: v for k, v in kit.items() if k in only}
+    for name, parts in kit.items():
             for o in parts:
                 S.smart_uv(o)
             joined = S.join_objects(parts, name)
@@ -363,6 +362,6 @@ if __name__ == "__main__":
     only = None
     if "--only" in sys.argv:
         k = sys.argv.index("--only")
-        if k + 1 < len(sys.argv):
-            only = sys.argv[k + 1]
+        names = [a for a in sys.argv[k + 1:] if not a.startswith("--")]
+        only = set(names) or None
     build_all(render="--no-render" not in sys.argv, only=only)

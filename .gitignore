@@ -28,3 +28,7 @@ answers/
 .DS_Store
 Thumbs.db
 *.fbm/
+
+# GLB-экспорт генераторов — Unity-проекту не нужен (FBX достаточно)
+Assets/Subsistence/Models/**/*.glb
+__pycache__/

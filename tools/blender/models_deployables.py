@@ -26,7 +26,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import subs_common as S
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.abspath(os.path.join(HERE, "..", "..", "UnityProject", "Assets", "Subsistence", "Models", "Props"))
+OUT = os.path.abspath(os.path.join(HERE, "..", "..", "Assets", "Subsistence", "Models", "Props"))
 PREVIEW = os.path.abspath(os.path.join(HERE, "..", "..", "docs", "previews"))
 
 
@@ -554,42 +554,44 @@ def build_wind_generator(M):
 
 # ===================================================================== двери/замки
 def build_door(M, tier="wood"):
-    """Дверь: полотно, петли, ручка, замок. Тиры: wood (доски), metal (панель), armored (HQM)."""
+    """Дверь: полотно, петли, ручка, замок. Тиры: wood (доски), metal (панель), armored (HQM).
+    Толщина полотна: 0.20/0.24/0.30 (раньше были картонные 0.06/0.09/0.14)."""
     st, sd, ch = M["steel"], M["steel_dark"], M["chrome"]
     if tier == "wood":
-        body, thick = M["wood"], 0.06
+        body, thick = M["wood"], 0.20
     elif tier == "metal":
-        body, thick = M["steel"], 0.09
+        body, thick = M["steel"], 0.24
     else:
-        body, thick = M["hqm"], 0.14
+        body, thick = M["hqm"], 0.30
+    s = thick * 0.5                                     # полу-толщина = плоскость полотна
     name = {"wood": "DW", "metal": "DM", "armored": "DA"}[tier]
     p = [S.box(name + "_slab", (1.00, thick, 2.05), loc=(0, 0, 1.025), bevel=0.012, mat=body)]
     if tier == "wood":
         for i in range(5):
-            p.append(S.box(f"{name}_plank{i}", (1.02, 0.02, 0.34), loc=(0, -0.035, 0.24 + i * 0.40), mat=M["wood_dark"]))
+            p.append(S.box(f"{name}_plank{i}", (1.02, 0.03, 0.34), loc=(0, -(s + 0.012), 0.24 + i * 0.40), mat=M["wood_dark"]))
         for i in range(2):
-            p.append(S.box(f"{name}_brace{i}", (1.02, 0.02, 0.10), loc=(0, -0.05, 0.70 + i * 0.70),
+            p.append(S.box(f"{name}_brace{i}", (1.02, 0.025, 0.10), loc=(0, -(s + 0.025), 0.70 + i * 0.70),
                            rot=(0, 0, math.radians(14 - i * 28)), mat=M["wood_dark"]))
     elif tier == "metal":
         for i in range(3):
-            p.append(S.box(f"{name}_rib{i}", (1.02, 0.03, 0.08), loc=(0, -0.055, 0.45 + i * 0.60), mat=sd))
+            p.append(S.box(f"{name}_rib{i}", (1.02, 0.03, 0.08), loc=(0, -(s + 0.012), 0.45 + i * 0.60), mat=sd))
         for i in range(6):
-            p.append(bolt(f"{name}_rivet{i}", (-0.42 + i * 0.17, -0.07, 1.90), r=0.011, mat=ch,
+            p.append(bolt(f"{name}_rivet{i}", (-0.42 + i * 0.17, -(s + 0.02), 1.90), r=0.011, mat=ch,
                           rot=(math.radians(90), 0, 0)))
     else:
-        p.append(S.box(name + "_plate", (0.86, 0.04, 1.60), loc=(0, -0.08, 1.05), bevel=0.012, mat=M["hqm"]))
+        p.append(S.box(name + "_plate", (0.86, 0.035, 1.60), loc=(0, -(s + 0.015), 1.05), bevel=0.012, mat=M["hqm"]))
         for i in range(3):
-            p.append(S.box(f"{name}_hqm_rib{i}", (0.88, 0.03, 0.06), loc=(0, -0.10, 0.55 + i * 0.50), mat=sd))
-    # петли, ручка, замок
+            p.append(S.box(f"{name}_hqm_rib{i}", (0.88, 0.03, 0.06), loc=(0, -(s + 0.035), 0.55 + i * 0.50), mat=sd))
+    # петли, ручка (насквозь), замок
     for z in (0.35, 1.72):
-        p.extend(hinge(f"{name}_hinge{int(z*100)}", -0.53, -thick * 0.4, z, sd))
-    p.append(S.cylinder(name + "_handle", 0.022, 0.16, 14, loc=(0.34, -0.09, 1.02),
+        p.extend(hinge(f"{name}_hinge{int(z*100)}", -0.53, -(s + 0.005), z, sd))
+    p.append(S.cylinder(name + "_handle", 0.022, thick + 0.12, 14, loc=(0.34, 0.0, 1.02),
                         rot=(0, math.radians(90), 0), mat=ch))
-    p.append(S.box(name + "_handle_base", (0.10, 0.04, 0.14), loc=(0.28, -0.07, 1.02), bevel=0.008, mat=sd))
-    p.append(S.box(name + "_lock", (0.16, 0.06, 0.20), loc=(0.30, -0.06, 1.30), bevel=0.01, mat=sd))
-    p.append(S.cylinder(name + "_keyhole", 0.022, 0.05, 12, loc=(0.30, -0.10, 1.30),
+    p.append(S.box(name + "_handle_base", (0.10, 0.03, 0.14), loc=(0.28, -(s + 0.012), 1.02), bevel=0.008, mat=sd))
+    p.append(S.box(name + "_lock", (0.16, 0.06, 0.20), loc=(0.30, -(s + 0.02), 1.30), bevel=0.01, mat=sd))
+    p.append(S.cylinder(name + "_keyhole", 0.022, 0.05, 12, loc=(0.30, -(s + 0.045), 1.30),
                         rot=(math.radians(90), 0, 0), mat=ch))
-    p.append(S.box(name + "_plate_num", (0.12, 0.01, 0.06), loc=(-0.28, -0.08, 1.55), mat=M["paint_yellow"]))
+    p.append(S.box(name + "_plate_num", (0.12, 0.012, 0.06), loc=(-0.28, -(s + 0.012), 1.55), mat=M["paint_yellow"]))
     return p
 
 
@@ -779,7 +781,7 @@ MODELS = [
 def build_all(render=True, only=None):
     S.ensure_dir(OUT)
     total = 0
-    jobs = [m for m in MODELS if only is None or m[0] == only]
+    jobs = [m for m in MODELS if only is None or m[0] in only]
     for name, fn, fov, az in jobs:
         S.clean_scene()
         M = materials()
@@ -820,6 +822,6 @@ if __name__ == "__main__":
     only = None
     if "--only" in sys.argv:
         k = sys.argv.index("--only")
-        if k + 1 < len(sys.argv):
-            only = sys.argv[k + 1]
+        names = [a for a in sys.argv[k + 1:] if not a.startswith("--")]
+        only = set(names) or None
     build_all(render="--no-render" not in sys.argv, only=only)

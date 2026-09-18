@@ -33,6 +33,8 @@ SUBDIV   = int(opt("--subdiv", 3))           # глубина субдивизи
 STRENGTH = float(opt("--strength", 0.022))   # сила органической детализации (метры)
 SAMPLES  = int(opt("--samples", 32))         # сэмплы финального рендера (сравнение)
 KIND     = opt("--kind", "")                 # organic | hard (пусто = авто по префиксу)
+LOD2R    = float(opt("--lod2", 0.25))        # коэффициент decimate LOD2 (0.25; трубы жмём сильнее)
+DETAIL   = "--detail" in argv                # 20б: доп. слой строчек/швов (STUCCI WALL_IN)
 if not KIND:
     KIND = "organic" if MODEL.startswith(("MN_", "CH_")) else "hard"
 
@@ -109,7 +111,11 @@ if KIND == "organic":
     displace("hp_skin",  "hp_skin_tex",  "CLOUDS", 0.32, STRENGTH)                       # крупные неровности плоти
     displace("hp_micro", "hp_micro_tex", "STUCCI", 1.7, STRENGTH * 0.45, stucci_type="PLASTIC")  # микрорельеф
     displace("hp_pores", "hp_pores_tex", "VORONOI", 6.5, -STRENGTH * 0.30)              # поры-вмятины
-    hp_note = f"субдивизия ×{SUBDIV} + органика"
+    if DETAIL:                                                                          # 20б: строчки/швы (лёгкий апгрейд деталей)
+        displace("hp_stitch", "hp_stitch_tex", "STUCCI", 12.0, STRENGTH * 0.12, stucci_type="WALL_IN")
+        hp_note = f"субдивизия ×{SUBDIV} + органика + строчки"
+    else:
+        hp_note = f"субдивизия ×{SUBDIV} + органика"
 else:
     # хард-сёрфейс: фаски на кромках (bevel) + микроцарапины + мелкие вмятины
     bv = hp.modifiers.new("hp_bevel", "BEVEL")
@@ -216,7 +222,7 @@ def make_lod(src_obj, name, ratio):
     return o
 
 lod1 = make_lod(lp, MODEL + "_LOD1", 0.55)
-lod2 = make_lod(lp, MODEL + "_LOD2", 0.25)
+lod2 = make_lod(lp, MODEL + "_LOD2", LOD2R)
 
 # ---------- 8. экспорт FBX (LP + LOD) ----------
 def export(obj, fname):

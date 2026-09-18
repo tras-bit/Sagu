@@ -205,6 +205,9 @@ namespace Subsistence.Progression
         public static SkinShopUI Instance { get; private set; }
 
         Text _header, _list, _footer;
+        RawImage _preview;
+        Text _previewName, _previewNote;
+        int _sel;
         bool _open;
 
         public static void Open()
@@ -252,11 +255,34 @@ namespace Subsistence.Progression
 
             _list = UIStyle.Label(frame, string.Empty, 19, UIStyle.TermGreen, TextAnchor.UpperLeft);
             _list.rectTransform.offsetMin = new Vector2(24f, 54f);
-            _list.rectTransform.offsetMax = new Vector2(-24f, -70f);
+            _list.rectTransform.offsetMax = new Vector2(-16f, -70f);
             _list.rectTransform.anchorMin = new Vector2(0f, 0.06f);
-            _list.rectTransform.anchorMax = new Vector2(1f, 0.85f);
+            _list.rectTransform.anchorMax = new Vector2(0.56f, 0.85f);
 
-            _footer = UIStyle.Label(frame, "1..9 — купить/надеть · 0 — снять скин · ESC — закрыть", 17, UIStyle.TermGreenDim, TextAnchor.LowerLeft);
+            // 25а: превью выбранного скина (рендеры в Resources/skins/<id>, 1024)
+            var pvFrame = UIStyle.Panel(frame, "Preview", new Vector2(0.58f, 0.10f), new Vector2(0.995f, 0.85f),
+                                        Vector2.zero, Vector2.zero, UIStyle.PanelBgDeep);
+            pvFrame.gameObject.AddComponent<Outline>().effectColor = UIStyle.TermGreenDim;
+            var pvGo = new GameObject("PreviewImage", typeof(RectTransform), typeof(RawImage));
+            pvGo.transform.SetParent(pvFrame, false);
+            var pvRt = (RectTransform)pvGo.transform;
+            pvRt.anchorMin = new Vector2(0.04f, 0.17f);
+            pvRt.anchorMax = new Vector2(0.96f, 0.97f);
+            pvRt.offsetMin = pvRt.offsetMax = Vector2.zero;
+            _preview = pvGo.GetComponent<RawImage>();
+            _preview.color = new Color(1f, 1f, 1f, 0.05f);
+
+            _previewName = UIStyle.Label(pvFrame, string.Empty, 21, UIStyle.TermGreenBright, TextAnchor.UpperLeft);
+            _previewName.rectTransform.anchorMin = new Vector2(0.04f, 0.09f);
+            _previewName.rectTransform.anchorMax = new Vector2(0.96f, 0.16f);
+            _previewName.rectTransform.offsetMin = _previewName.rectTransform.offsetMax = Vector2.zero;
+
+            _previewNote = UIStyle.Label(pvFrame, string.Empty, 17, UIStyle.TermGreenDim, TextAnchor.UpperLeft);
+            _previewNote.rectTransform.anchorMin = new Vector2(0.04f, 0.005f);
+            _previewNote.rectTransform.anchorMax = new Vector2(0.96f, 0.085f);
+            _previewNote.rectTransform.offsetMin = _previewNote.rectTransform.offsetMax = Vector2.zero;
+
+            _footer = UIStyle.Label(frame, "↑↓ — выбор · Enter — купить/надеть · 1..9 — быстро · 0 — снять скин · ESC — закрыть", 17, UIStyle.TermGreenDim, TextAnchor.LowerLeft);
             _footer.rectTransform.anchorMin = new Vector2(0f, 0f);
             _footer.rectTransform.anchorMax = new Vector2(1f, 0.08f);
             _footer.rectTransform.offsetMin = new Vector2(24f, 10f);
@@ -282,7 +308,7 @@ namespace Subsistence.Progression
                 bool owned = SkinCatalog.IsOwned(s.id);
                 bool equipped = SkinCatalog.Equipped(s.itemId) == s.id;
 
-                sb.Append(i < 9 ? $"[{i + 1}] " : "[•] ");
+                sb.Append(i == _sel ? "<color=#ffd76a>▶</color>" : " ").Append(i < 9 ? $"[{i + 1}] " : "[•] ");
                 sb.Append(owned ? "<color=#8ef0b4>" : "<color=#b6ffd0>").Append(s.name.PadRight(26)).Append("</color>");
                 sb.Append(ItemDatabase.NameOf(s.itemId, true).PadRight(18));
                 if (owned) sb.Append(equipped ? "<color=#5cff92>[НАДЕТО]</color>" : "<color=#3f7d58>[куплено]</color>");
@@ -295,6 +321,27 @@ namespace Subsistence.Progression
             if (inv != null)
                 sb.Append($"   <color=#8ef0b4>скрап: {inv.CountOf("scrap")} · жетоны: {inv.CountOf("trade.token")} · годных: {skin_hint(inv)}</color>");
             _list.text = sb.ToString();
+
+            UpdatePreview();
+        }
+
+        /// <summary>25а: превью выбранного скина — рендер из Resources/skins (1024; мастера 2K в docs).</summary>
+        void UpdatePreview()
+        {
+            if (_preview == null) return;
+            var skins = SkinCatalog.All;
+            if (_sel < 0 || _sel >= skins.Count) return;
+            var s = skins[_sel];
+
+            var tex = Resources.Load<Texture2D>("skins/" + s.id.Replace('.', '_'));
+            _preview.texture = tex;
+            _preview.color = tex != null ? Color.white : new Color(1f, 1f, 1f, 0.05f);
+
+            bool owned = SkinCatalog.IsOwned(s.id);
+            bool equipped = SkinCatalog.Equipped(s.itemId) == s.id;
+            string action = equipped ? "[НАДЕТО]" : owned ? "Enter — надеть" : "Enter — купить: " + Price(s);
+            _previewName.text = $"{s.name}\n<color=#3f7d58>{ItemDatabase.NameOf(s.itemId, true)}</color>";
+            _previewNote.text = $"<color=#ffd76a>{action}</color>\n«{s.note}»";
         }
 
         static string Price(SkinDef s)
@@ -320,22 +367,26 @@ namespace Subsistence.Progression
             if (!_open) return;
             if (Input.GetKeyDown(KeyCode.Escape)) { Show(false); return; }
 
+            var skins = SkinCatalog.All;
+
+            // 25а: навигация ↑↓ (W/S) — теперь доступны все 14, не только 1..9
+            if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W))
+            {
+                _sel = (_sel + skins.Count - 1) % skins.Count;
+                Refresh();
+            }
+            if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S))
+            {
+                _sel = (_sel + 1) % skins.Count;
+                Refresh();
+            }
+            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+                BuyOrEquip(_sel);
+
             int index = -1;
             for (int i = 0; i < 9 && index < 0; i++)
                 if (Input.GetKeyDown(KeyCode.Alpha1 + i)) index = i;
-
-            if (index >= 0 && index < SkinCatalog.All.Count)
-            {
-                var skin = SkinCatalog.All[index];
-                string msg;
-                var inv = PlayerRef()?.inventory;
-
-                if (SkinCatalog.IsOwned(skin.id)) { SkinCatalog.Equip(skin); msg = $"{skin.name} — надето"; }
-                else if (!SkinShop.TryBuy(inv, skin, out msg)) { /* msg уже собран */ }
-
-                Refresh();
-                if (_footer != null) _footer.text = msg + "   ·   ESC — закрыть";
-            }
+            if (index >= 0 && index < skins.Count) BuyOrEquip(index);
 
             if (Input.GetKeyDown(KeyCode.Alpha0))
             {
@@ -344,6 +395,22 @@ namespace Subsistence.Progression
                 if (item != null && !item.IsEmpty) { SkinCatalog.Unequip(item.id); if (_footer != null) _footer.text = $"скин снят с {ItemDatabase.NameOf(item.id, true)}"; }
                 Refresh();
             }
+        }
+
+        void BuyOrEquip(int index)
+        {
+            var skins = SkinCatalog.All;
+            if (index < 0 || index >= skins.Count) return;
+            _sel = index;
+            var skin = skins[index];
+            string msg;
+            var inv = PlayerRef()?.inventory;
+
+            if (SkinCatalog.IsOwned(skin.id)) { SkinCatalog.Equip(skin); msg = $"{skin.name} — надето"; }
+            else if (!SkinShop.TryBuy(inv, skin, out msg)) { /* msg уже собран */ }
+
+            Refresh();
+            if (_footer != null) _footer.text = msg + "   ·   ESC — закрыть";
         }
     }
 }

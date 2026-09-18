@@ -23,9 +23,11 @@ import collections
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, ".."))
-ASSETS = os.path.join(ROOT, "UnityProject", "Assets")
-PKGS = os.path.join(ROOT, "UnityProject", "Packages", "manifest.json")
-VER = os.path.join(ROOT, "UnityProject", "ProjectSettings", "ProjectVersion.txt")
+# проект лежит в корне репо; совместимость со старой раскладкой UnityProject/
+UROOT = os.path.join(ROOT, "UnityProject") if os.path.isdir(os.path.join(ROOT, "UnityProject", "Assets")) else ROOT
+ASSETS = os.path.join(UROOT, "Assets")
+PKGS = os.path.join(UROOT, "Packages", "manifest.json")
+VER = os.path.join(UROOT, "ProjectSettings", "ProjectVersion.txt")
 UNITY = "2022.3.62f2"
 
 # API, которых нет в 2022.3 (появились в 2023.x / Unity 6). Линтер синтаксиса их не видит.

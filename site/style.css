@@ -1,0 +1,48 @@
+:root{
+  --bg:#0b0e0c; --panel:#11161214; --line:#223428; --text:#cfe8d8; --dim:#7fa38c;
+  --acc:#39ff6a; --acc-dim:#1d7a3c;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);
+  font:14px/1.45 "Cascadia Code","JetBrains Mono",Consolas,monospace}
+header{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  padding:12px 18px;background:#0d120ee8;border-bottom:1px solid var(--line);backdrop-filter:blur(6px)}
+.brand{font-weight:700;letter-spacing:.14em;color:var(--acc);text-shadow:0 0 12px #39ff6a55}
+.brand span{display:block;font-weight:400;letter-spacing:.04em;color:var(--dim);font-size:11px}
+#q{flex:1 1 240px;min-width:180px;background:#0a0f0b;border:1px solid var(--line);color:var(--text);
+  padding:9px 12px;border-radius:8px;outline:none}
+#q:focus{border-color:var(--acc-dim)}
+#cats{display:flex;gap:6px;flex-wrap:wrap}
+#cats button{background:#0a0f0b;border:1px solid var(--line);color:var(--dim);padding:7px 12px;
+  border-radius:999px;cursor:pointer;font:inherit;font-size:12px}
+#cats button.on{color:var(--acc);border-color:var(--acc-dim);background:#12241a}
+#count{color:var(--dim);font-size:12px;min-width:70px;text-align:right}
+
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;padding:16px}
+.card{position:relative;background:#0e130f;border:1px solid var(--line);border-radius:10px;overflow:hidden;
+  cursor:pointer;padding:0;text-align:left;transition:transform .12s ease,border-color .12s ease}
+.card:hover{transform:translateY(-3px);border-color:var(--acc-dim)}
+.card img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#080b09}
+.card .meta{display:flex;justify-content:space-between;gap:8px;padding:8px 10px}
+.card .nm{color:var(--text);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .ct{color:var(--dim);font-size:11px;white-space:nowrap}
+
+#viewer{position:fixed;inset:0;z-index:10;background:#080b09f2}
+#viewer.hidden{display:none}
+#viewer canvas{display:block;width:100%;height:100%}
+#viewer button{position:absolute;z-index:2;background:#0e130fee;border:1px solid var(--line);color:var(--text);
+  border-radius:10px;cursor:pointer;font:inherit}
+#close{top:14px;right:14px;width:42px;height:42px;font-size:17px}
+#prev,#next{top:50%;transform:translateY(-50%);width:46px;height:64px;font-size:30px;color:var(--dim)}
+#prev{left:10px}#next{right:10px}
+#viewer button:hover{color:var(--acc);border-color:var(--acc-dim)}
+#panel{position:absolute;left:14px;bottom:14px;z-index:2;background:#0e130fee;border:1px solid var(--line);
+  border-radius:10px;padding:10px 14px;min-width:260px}
+#vname{color:var(--acc);font-weight:700;letter-spacing:.06em}
+#vinfo{color:var(--dim);font-size:12px;margin:2px 0 8px}
+#panel .row{display:flex;gap:6px;align-items:center}
+#panel .row button{position:static;background:#0a0f0b;border:1px solid var(--line);color:var(--dim);
+  padding:5px 11px;border-radius:999px;font-size:12px}
+#panel .row button.on{color:var(--acc);border-color:var(--acc-dim)}
+#panel .hint{color:#55705f;font-size:11px;margin-left:6px}
+@media (max-width:640px){ .brand span{display:none} #panel{right:14px} }

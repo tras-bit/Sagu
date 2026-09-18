@@ -190,6 +190,8 @@ namespace Subsistence.EditorTools
                 var wantType = normalMap ? TextureImporterType.NormalMap : TextureImporterType.Default;
                 if (importer.textureType != wantType) { importer.textureType = wantType; dirty = true; }
                 if (importer.sRGBTexture == normalMap) { importer.sRGBTexture = !normalMap; dirty = true; }
+                if (importer.anisoLevel != 4) { importer.anisoLevel = 4; dirty = true; }          // чётче под углом
+                if (!importer.mipmapEnabled) { importer.mipmapEnabled = true; dirty = true; }     // без «муара» вдали
                 if (dirty) { importer.SaveAndReimport(); fixedCount++; }
             }
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
@@ -217,14 +219,14 @@ namespace Subsistence.EditorTools
                 renderers[i].sharedMaterial = mat;
         }
 
-        /// <summary>Смешивает <имя>_color.png с <имя>_ao.png (AO вшивается в альбедо: floor 0.55) → <имя>_albedo.png.</summary>
+        /// <summary>Смешивает <имя>_color.png с <имя>_ao.png → <имя>_albedo.png (AO floor 0.55 + панч контраста/насыщенности).</summary>
         static string MakeAlbedoAo(string dir, string name)
         {
             string outPath = $"{dir}/{name}_albedo.png";
             string colorPath = $"{dir}/{name}_color.png";
             string aoPath = $"{dir}/{name}_ao.png";
             if (!File.Exists(colorPath)) return "";
-            if (!File.Exists(aoPath) || File.Exists(outPath)) return outPath;
+            if (!File.Exists(aoPath)) return outPath;
 
             var color = LoadReadablePng(colorPath);
             var ao = LoadReadablePng(aoPath);
@@ -246,7 +248,13 @@ namespace Subsistence.EditorTools
                     float occ = ao.GetPixel(x * ao.width / w, y * ao.height / h).r;
                     float k = 0.55f + 0.45f * occ;                     // AO: 0.55 (тень) … 1.0 (открыто)
                     var c = cp[i];
-                    rp[i] = new Color(c.r * k, c.g * k, c.b * k, c.a);
+                    // ПАНЧ: контраст вокруг средней яркости + насыщенность — без этого
+                    // запечённые карты выглядят белёсыми/выцветшими (жалоба «текстуры говно»)
+                    float r = Mathf.Clamp01((c.r * k - 0.5f) * 1.13f + 0.5f);
+                    float g = Mathf.Clamp01((c.g * k - 0.5f) * 1.13f + 0.5f);
+                    float b = Mathf.Clamp01((c.b * k - 0.5f) * 1.13f + 0.5f);
+                    float lum = 0.299f * r + 0.587f * g + 0.114f * b;
+                    rp[i] = new Color(lum + (r - lum) * 1.22f, lum + (g - lum) * 1.22f, lum + (b - lum) * 1.22f, c.a);
                 }
             result.SetPixels(rp);
             result.Apply(false, false);

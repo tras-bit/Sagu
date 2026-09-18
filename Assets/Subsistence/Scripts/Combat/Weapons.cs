@@ -351,6 +351,17 @@ namespace Subsistence.Combat
         readonly RaycastHit[] _hitBuffer = new RaycastHit[16];
         float _laserTimer, _flashlightTimer;
 
+        // ---- вьюмодель: оружие в руках от 1-го лица (модели W_* из ModelLibrary) ----
+        Transform _vmRoot;                       // ребёнок камеры, двигается от ADS/отдачи/покачивания
+        GameObject _vmModel;
+        string _vmName;                          // какая модель сейчас показана
+        float _vmKick;                           // «пинок» от выстрела (затухает)
+        float _adsBlend;                         // 0 = от бедра, 1 = прицеливание
+        float _bobPhase, _bobAmp;                // покачивание при ходьбе
+        float _fovBase = -1f;                    // исходный FOV камеры (для зума при ADS)
+        Vector3 _vmLastPos;
+        Subsistence.Player.PlayerController _vmOwner;
+
         WeaponStats CurrentStats
         {
             get
@@ -386,8 +397,81 @@ namespace Subsistence.Combat
 
             RecoverRecoil(Time.deltaTime);
 
+            UpdateViewModel(item, def);
+
             if (def != null && (def.category == ItemCategory.Weapon || def.category == ItemCategory.Tool))
                 UpdateWeapon(item);
+        }
+
+        /// <summary>
+        /// Вьюмодель: модель активного предмета в руках (правый нижний угол), ADS-поза по центру,
+        /// плавный FOV-зум, покачивание при ходьбе, отдача назад-вверх. На сетевом двойнике
+        /// рендереры выключены — чужие игроки не должны видеть «плавающее» оружие.
+        /// </summary>
+        void UpdateViewModel(ItemStack item, ItemDef def)
+        {
+            if (viewCamera == null) return;
+            if (_vmRoot == null)
+            {
+                _vmOwner = GetComponentInParent<Subsistence.Player.PlayerController>();
+                var go = new GameObject("ViewModel");
+                go.transform.SetParent(viewCamera.transform, false);
+                _vmRoot = go.transform;
+                _vmLastPos = _vmOwner != null ? _vmOwner.transform.position : Vector3.zero;
+            }
+
+            // смена предмета → смена модели
+            bool holdable = def != null && (def.category == ItemCategory.Weapon || def.category == ItemCategory.Tool);
+            string want = holdable && item != null ? World.ModelLibrary.ForWorldItem(item.id) : null;
+            if (want != _vmName)
+            {
+                _vmName = want;
+                if (_vmModel != null) UnityEngine.Object.Destroy(_vmModel);
+                _vmModel = null;
+                if (!string.IsNullOrEmpty(want) && World.ModelLibrary.Has(want))
+                {
+                    _vmModel = World.ModelLibrary.Attach(want, _vmRoot, 0f);
+                    if (_vmModel != null)
+                    {
+                        // генератор кладёт дуло в +Y, «верх» оружия в +Z → дулом вперёд, прицелом вверх
+                        _vmModel.transform.localRotation = Quaternion.Euler(-90f, 180f, 0f);
+                        var b = World.ModelLibrary.BoundsOf(_vmModel);
+                        float len = Mathf.Max(b.size.x, Mathf.Max(b.size.y, b.size.z));
+                        if (len > 0.01f) _vmModel.transform.localScale *= 0.58f / len;   // ~58 см в руках
+                        foreach (var r in _vmModel.GetComponentsInChildren<Renderer>(true))
+                        {
+                            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;   // тень от пушки на стенах не нужна
+                            if (_vmOwner != null && _vmOwner.remoteControlled) r.enabled = false;
+                        }
+                    }
+                }
+            }
+
+            // ADS: поза + плавный зум камеры
+            var s = CurrentStats;
+            float adsTarget = IsAiming && _vmModel != null && s != null && s.cls != WeaponClass.Melee ? 1f : 0f;
+            _adsBlend = Mathf.MoveTowards(_adsBlend, adsTarget, Time.deltaTime / Mathf.Max(0.05f, s != null ? s.adsTime : 0.25f));
+            if (_fovBase < 0f) _fovBase = viewCamera.fieldOfView;
+            viewCamera.fieldOfView = Mathf.Lerp(_fovBase, _fovBase / 1.3f, _adsBlend);
+
+            // покачивание при ходьбе (в ADS почти гасится)
+            if (_vmOwner != null)
+            {
+                Vector3 p = _vmOwner.transform.position;
+                float speed = (p - _vmLastPos).magnitude / Mathf.Max(Time.deltaTime, 0.001f);
+                _vmLastPos = p;
+                _bobPhase += Time.deltaTime * Mathf.Clamp(speed, 0f, 7f) * 1.9f;
+                _bobAmp = Mathf.Lerp(_bobAmp, speed > 0.6f ? 1f : 0f, Time.deltaTime * 6f);
+            }
+            _vmKick = Mathf.Max(0f, _vmKick - Time.deltaTime * 6.5f);
+            float kick = _vmKick * _vmKick;
+
+            float bobA = _bobAmp * (1f - _adsBlend * 0.85f);
+            var bob = new Vector3(Mathf.Sin(_bobPhase) * 0.007f * bobA, Mathf.Abs(Mathf.Cos(_bobPhase)) * 0.007f * bobA, 0f);
+            var hipPos = new Vector3(0.24f, -0.21f, 0.42f);
+            var adsPos = new Vector3(0f, -0.125f, 0.30f);
+            _vmRoot.localPosition = Vector3.Lerp(hipPos, adsPos, _adsBlend) + bob + new Vector3(0f, 0.014f * kick, 0.05f * kick);
+            _vmRoot.localRotation = Quaternion.Euler(-4f * kick, 0f, 0f);
         }
 
         void UpdateWeapon(ItemStack item)
@@ -438,6 +522,7 @@ namespace Subsistence.Combat
             // Отдача (клиентская визуальная + серверная проверка угла)
             var kick = s.recoil.KickAt(_shotIndex++);
             recoilAccum += kick;
+            _vmKick = 1f;                       // пинок вьюмодели (гасится в UpdateViewModel)
 
             // Разброс: стойка + движение + ADS
             float spread = IsAiming ? s.adsSpreadDeg : s.hipSpreadDeg;

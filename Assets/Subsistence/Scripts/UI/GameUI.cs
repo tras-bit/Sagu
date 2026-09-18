@@ -24,6 +24,11 @@ namespace Subsistence.UI
         Text _healthText, _buildHint, _toast, _vitalsText;
         Image _damageFlash, _crosshairDot;
         RectTransform _crosshair;
+        RectTransform[] _chLine = new RectTransform[4];      // 4 штриха прицела (вверх/вниз/вправо/влево)
+        RectTransform _chHitRoot;                             // хитмаркер — диагональный крестик
+        Image[] _chHitLine = new Image[4];
+        Combat.WeaponController _hudWeapon;
+        float _hitTime;
         readonly List<Image> _hotbarSlots = new List<Image>(6);
         readonly List<Text> _hotbarTexts = new List<Text>(6);
         float _toastUntil;
@@ -41,12 +46,40 @@ namespace Subsistence.UI
         {
             _canvas = UIStyle.CreateCanvas("HudCanvas", 100, out _);
 
-            // ---------- Прицел ----------
+            // ---------- Прицел: 4 штриха с чёрной обводкой (видно на любом фоне) ----------
             _crosshair = UIStyle.Panel(_canvas.transform, "Crosshair", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-                                       new Vector2(-18, -18), new Vector2(18, 18), new Color(1, 1, 1, 0.55f));
+                                       new Vector2(-50, -50), new Vector2(50, 50), new Color(0, 0, 0, 0));
+            _crosshair.GetComponent<Image>().raycastTarget = false;
+            for (int i = 0; i < 4; i++)
+            {
+                var line = UIStyle.Panel(_crosshair, "Line" + i, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                                         new Vector2(-2, -5), new Vector2(2, 5), new Color(0, 0, 0, 0.9f));
+                line.GetComponent<Image>().raycastTarget = false;
+                var core = UIStyle.Panel(line, "Core", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                                         new Vector2(-1, -4), new Vector2(1, 4), new Color(0.55f, 1f, 0.7f, 0.95f));
+                core.GetComponent<Image>().raycastTarget = false;
+                _chLine[i] = line;
+            }
             _crosshairDot = UIStyle.Panel(_crosshair, "Dot", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
                                           new Vector2(-1.5f, -1.5f), new Vector2(1.5f, 1.5f), new Color(1, 0.95f, 0.6f, 0.9f)).GetComponent<Image>();
+            _crosshairDot.raycastTarget = false;
             _crosshairDot.enabled = false;
+
+            // ---------- Хитмаркер: диагональный крестик при попадании ----------
+            _chHitRoot = UIStyle.Panel(_crosshair, "Hitmark", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                                       new Vector2(-40, -40), new Vector2(40, 40), new Color(0, 0, 0, 0));
+            _chHitRoot.GetComponent<Image>().raycastTarget = false;
+            for (int i = 0; i < 4; i++)
+            {
+                float ang = 45f + i * 90f;
+                var t = UIStyle.Panel(_chHitRoot, "T" + i, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                                      new Vector2(-1.5f, -6), new Vector2(1.5f, 6), new Color(1f, 0.25f, 0.2f, 0.95f));
+                t.GetComponent<Image>().raycastTarget = false;
+                t.localRotation = Quaternion.Euler(0, 0, ang);
+                t.anchoredPosition = new Vector2(Mathf.Cos(ang * Mathf.Deg2Rad), Mathf.Sin(ang * Mathf.Deg2Rad)) * 13f;
+                _chHitLine[i] = t.GetComponent<Image>();
+            }
+            _chHitRoot.gameObject.SetActive(false);
 
             // ---------- Вспышка урона ----------
             _damageFlash = UIStyle.Panel(_canvas.transform, "DamageFlash", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
@@ -107,6 +140,12 @@ namespace Subsistence.UI
             return fillImg;
         }
 
+        void SetChLine(int i, Vector2 min, Vector2 max)
+        {
+            _chLine[i].offsetMin = min;
+            _chLine[i].offsetMax = max;
+        }
+
         void Update()
         {
             if (player == null) return;
@@ -150,12 +189,33 @@ namespace Subsistence.UI
                 _hotbarSlots[i].color = i == inv.ActiveHotbarIndex ? new Color(0.35f, 0.32f, 0.12f, 0.35f) : new Color(0.05f, 0.06f, 0.05f, 0.7f);
             }
 
-            // прицел: расширяется от разброса
-            var weapon = player.GetComponentInChildren<Combat.WeaponController>();
-            float spread = weapon?.Stats != null ? (weapon.IsAiming ? weapon.Stats.adsSpreadDeg : weapon.Stats.hipSpreadDeg) * PlayerControllerState.SpreadMultiplier : 1f;
-            float size = Mathf.Clamp(18f + spread * 6f, 12f, 90f);
-            _crosshair.sizeDelta = new Vector2(size, size);
-            _crosshairDot.enabled = PlayerControllerState.IsSprinting || PlayerControllerState.IsSwimming;
+            // прицел: 4 штриха, зазор = разброс; хитмаркер при попадании
+            if (_hudWeapon == null)
+            {
+                _hudWeapon = player.GetComponentInChildren<Combat.WeaponController>();
+                if (_hudWeapon != null) _hudWeapon.DamageDealt += dmg => _hitTime = 0.22f;
+            }
+            var weapon = _hudWeapon;
+            bool ranged = weapon != null && weapon.Stats != null && weapon.Stats.cls != Subsistence.Core.WeaponClass.Melee;
+            float spread = ranged ? (weapon.IsAiming ? weapon.Stats.adsSpreadDeg : weapon.Stats.hipSpreadDeg) * PlayerControllerState.SpreadMultiplier : 1f;
+            float gap = Mathf.Clamp(6f + spread * 5f, 6f, 46f);
+            float len = 10f;
+            SetChLine(0, new Vector2(-2, gap), new Vector2(2, gap + len));        // вверх
+            SetChLine(1, new Vector2(-2, -gap - len), new Vector2(2, -gap));      // вниз
+            SetChLine(2, new Vector2(gap, -2), new Vector2(gap + len, 2));        // вправо
+            SetChLine(3, new Vector2(-gap - len, -2), new Vector2(-gap, 2));      // влево
+            for (int i = 0; i < 4; i++) _chLine[i].gameObject.SetActive(ranged);
+            _crosshairDot.enabled = !ranged || PlayerControllerState.IsSprinting || PlayerControllerState.IsSwimming;
+
+            // хитмаркер: вспышка и затухание
+            if (_hitTime > 0f)
+            {
+                _hitTime -= Time.deltaTime;
+                float a = Mathf.Clamp01(_hitTime / 0.22f);
+                _chHitRoot.gameObject.SetActive(true);
+                for (int i = 0; i < 4; i++) { var c = _chHitLine[i].color; c.a = a; _chHitLine[i].color = c; }
+            }
+            else _chHitRoot.gameObject.SetActive(false);
 
             // вспышка урона затухает
             if (_flashAmount > 0f)

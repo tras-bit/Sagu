@@ -361,6 +361,7 @@ namespace Subsistence.Combat
         float _fovBase = -1f;                    // исходный FOV камеры (для зума при ADS)
         Vector3 _vmLastPos;
         Subsistence.Player.PlayerController _vmOwner;
+        Light _vmFlash;                          // вспышка выстрела у дула
 
         WeaponStats CurrentStats
         {
@@ -418,6 +419,17 @@ namespace Subsistence.Combat
                 go.transform.SetParent(viewCamera.transform, false);
                 _vmRoot = go.transform;
                 _vmLastPos = _vmOwner != null ? _vmOwner.transform.position : Vector3.zero;
+
+                // вспышка выстрела: тёплый PointLight у дула (интенсивность = отдача в UpdateViewModel)
+                var flashGo = new GameObject("MuzzleFlash");
+                flashGo.transform.SetParent(_vmRoot, false);
+                flashGo.transform.localPosition = new Vector3(0f, 0.02f, 0.55f);
+                _vmFlash = flashGo.AddComponent<Light>();
+                _vmFlash.type = LightType.Point;
+                _vmFlash.color = new Color(1f, 0.72f, 0.38f);
+                _vmFlash.range = 2.5f;
+                _vmFlash.intensity = 0f;
+                _vmFlash.shadows = LightShadows.None;
             }
 
             // смена предмета → смена модели
@@ -433,11 +445,8 @@ namespace Subsistence.Combat
                     _vmModel = World.ModelLibrary.Attach(want, _vmRoot, 0f);
                     if (_vmModel != null)
                     {
-                        // генератор кладёт дуло в +Y, «верх» оружия в +Z → дулом вперёд, прицелом вверх
-                        _vmModel.transform.localRotation = Quaternion.Euler(-90f, 180f, 0f);
-                        var b = World.ModelLibrary.BoundsOf(_vmModel);
-                        float len = Mathf.Max(b.size.x, Mathf.Max(b.size.y, b.size.z));
-                        if (len > 0.01f) _vmModel.transform.localScale *= 0.58f / len;   // ~58 см в руках
+                        _vmModel.transform.localRotation = Quaternion.identity;
+                        AlignViewModelModel();     // автоповорот ПО ГЕОМЕТРИИ: дуло вперёд, прицел вверх, ровно
                         foreach (var r in _vmModel.GetComponentsInChildren<Renderer>(true))
                         {
                             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;   // тень от пушки на стенах не нужна
@@ -467,11 +476,95 @@ namespace Subsistence.Combat
             float kick = _vmKick * _vmKick;
 
             float bobA = _bobAmp * (1f - _adsBlend * 0.85f);
-            var bob = new Vector3(Mathf.Sin(_bobPhase) * 0.007f * bobA, Mathf.Abs(Mathf.Cos(_bobPhase)) * 0.007f * bobA, 0f);
-            var hipPos = new Vector3(0.24f, -0.21f, 0.42f);
-            var adsPos = new Vector3(0f, -0.125f, 0.30f);
+            var bob = new Vector3(Mathf.Sin(_bobPhase) * 0.011f * bobA, Mathf.Abs(Mathf.Cos(_bobPhase)) * 0.011f * bobA, 0f);
+            var hipPos = new Vector3(0.24f, -0.225f, 0.30f);
+            var adsPos = new Vector3(0f, -0.16f, 0.22f);
             _vmRoot.localPosition = Vector3.Lerp(hipPos, adsPos, _adsBlend) + bob + new Vector3(0f, 0.014f * kick, 0.05f * kick);
             _vmRoot.localRotation = Quaternion.Euler(-4f * kick, 0f, 0f);
+            if (_vmFlash != null) _vmFlash.intensity = _vmKick * 12f;   // вспышка выстрела у дула
+        }
+
+        static void Swap<T>(ref T a, ref T b) { var t = a; a = b; b = t; }
+
+        /// <summary>
+        /// Автовыравнивание вьюмодели по геометрии (не полагаемся на конвенции осей FBX —
+        /// ручной поворот в 1.1.8 оказывался кривым). Самая длинная ось габаритов → вперёд (+Z),
+        /// вторая по величине → вверх (+Y). Какой конец дулом: тонкая половина (ствол) против
+        /// массивной (ресивер/приклад/магазин). Где верх: в «прикладовой» половине снизу
+        /// геометрии больше (магазин/рукоять), чем сверху (прицелы). После поворота центр
+        /// габаритов ставится в (0, -0.02, 0.16) от vmRoot — оружие всегда лежит ровно.
+        /// </summary>
+        void AlignViewModelModel()
+        {
+            if (_vmModel == null || _vmRoot == null) return;
+
+            // масштаб: длина ~62 см в руках
+            var b0 = World.ModelLibrary.BoundsOf(_vmModel);
+            float len0 = Mathf.Max(b0.size.x, Mathf.Max(b0.size.y, b0.size.z));
+            if (len0 > 0.01f) _vmModel.transform.localScale *= 0.62f / len0;
+
+            // все вершины в пространстве vmRoot
+            var pts = new List<Vector3>();
+            foreach (var mf in _vmModel.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (mf.sharedMesh == null) continue;
+                var v = mf.sharedMesh.vertices;
+                var m = _vmRoot.worldToLocalMatrix * mf.transform.localToWorldMatrix;
+                for (int i = 0; i < v.Length; i++) pts.Add(m.MultiplyPoint3x4(v[i]));
+            }
+            if (pts.Count < 16) return;
+
+            Vector3 min = pts[0], max = pts[0];
+            for (int i = 1; i < pts.Count; i++) { min = Vector3.Min(min, pts[i]); max = Vector3.Max(max, pts[i]); }
+            var size = max - min;
+            var c = (min + max) * 0.5f;
+
+            // оси по величине: axLen — длина, axH — высота, axW — ширина
+            int axLen = 0, axH = 1, axW = 2;
+            float sLen = size.x, sH = size.y, sW = size.z;
+            if (sLen < sH) { Swap(ref axLen, ref axH); Swap(ref sLen, ref sH); }
+            if (sLen < sW) { Swap(ref axLen, ref axW); Swap(ref sLen, ref sW); }
+            if (sH < sW) { Swap(ref axH, ref axW); Swap(ref sH, ref sW); }
+            if (sH < sLen * 0.22f) return;                    // вырожденная геометрия — не трогаем
+
+            float Get(Vector3 p, int a) => a == 0 ? p.x : a == 1 ? p.y : p.z;
+            Vector3 Axis(int a) => a == 0 ? Vector3.right : a == 1 ? Vector3.up : Vector3.forward;
+
+            float cLen = Get(c, axLen), cH = Get(c, axH);
+
+            // 1) дуло — тонкая половина вдоль длины (ствол против ресивера с магазином)
+            var minPos = Vector3.one * 1e9f; var maxPos = -Vector3.one * 1e9f;
+            var minNeg = Vector3.one * 1e9f; var maxNeg = -Vector3.one * 1e9f;
+            foreach (var p in pts)
+            {
+                if (Get(p, axLen) > cLen) { minPos = Vector3.Min(minPos, p); maxPos = Vector3.Max(maxPos, p); }
+                else { minNeg = Vector3.Min(minNeg, p); maxNeg = Vector3.Max(maxNeg, p); }
+            }
+            float Cross(Vector3 mn, Vector3 mx)
+                => Mathf.Max(0.0001f, Get(mx, axH) - Get(mn, axH)) * Mathf.Max(0.0001f, Get(mx, axW) - Get(mn, axW));
+            bool muzzlePositive = Cross(minPos, maxPos) <= Cross(minNeg, maxNeg);
+
+            // 2) верх — в прикладовой половине снизу точек больше (магазин/рукоять), чем сверху
+            int below = 0, above = 0;
+            foreach (var p in pts)
+            {
+                bool butt = muzzlePositive ? Get(p, axLen) < cLen : Get(p, axLen) > cLen;
+                if (!butt) continue;
+                if (Get(p, axH) > cH) above++; else below++;
+            }
+            bool topPositive = below > above;
+
+            // 3) поворот: dirLen → +Z (вперёд), dirH → +Y (вверх)
+            Vector3 dirLen = Axis(axLen) * (muzzlePositive ? 1f : -1f);
+            Vector3 dirH = Axis(axH) * (topPositive ? 1f : -1f);
+            var q = Quaternion.Inverse(Quaternion.LookRotation(dirLen, dirH));
+            _vmModel.transform.localRotation = q;
+
+            // 4) нормировка позиции: центр габаритов в (0, -0.02, 0.16) от vmRoot
+            min = Vector3.one * 1e9f; max = -Vector3.one * 1e9f;
+            foreach (var p in pts) { var rp = q * p; min = Vector3.Min(min, rp); max = Vector3.Max(max, rp); }
+            var ctr = (min + max) * 0.5f;
+            _vmModel.transform.localPosition = new Vector3(-ctr.x, -0.02f - ctr.y, 0.16f - ctr.z);
         }
 
         void UpdateWeapon(ItemStack item)

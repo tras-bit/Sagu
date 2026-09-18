@@ -154,7 +154,7 @@ namespace Subsistence.UI
 
         [Header("Поведение")]
         public bool autoPlayOnBoot = false;     // в редакторе удобно: сразу загрузка (минуя ввод)
-        public string version = "1.1.8-alpha";
+        public string version = "1.1.9-alpha";
 
         public event Action OnPlayRequested;     // PLAY/HOST → RuntimeBootstrap грузит мир
         public event Action Finished;

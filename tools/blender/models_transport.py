@@ -21,7 +21,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import subs_common as S
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.abspath(os.path.join(HERE, "..", "..", "UnityProject", "Assets", "Subsistence", "Models", "Props"))
+OUT = os.path.abspath(os.path.join(HERE, "..", "..", "Assets", "Subsistence", "Models", "Props"))
 PREVIEW = os.path.abspath(os.path.join(HERE, "..", "..", "docs", "previews"))
 
 
@@ -29,7 +29,7 @@ PREVIEW = os.path.abspath(os.path.join(HERE, "..", "..", "docs", "previews"))
 def materials():
     return dict(
         steel=S.pbr_material("M_Tr_Steel", (0.46, 0.47, 0.50, 1), 0.86, 0.32, noise_scale=60, bump=0.35),
-        steel_dark=S.pbr_material("M_Tr_SteelDark", (0.17, 0.175, 0.19, 1), 0.80, 0.42, noise_scale=90, bump=0.45),
+        steel_dark=S.pbr_material("M_Tr_SteelDark", (0.24, 0.245, 0.27, 1), 0.80, 0.42, noise_scale=90, bump=0.45),
         chrome=S.pbr_material("M_Tr_Chrome", (0.78, 0.79, 0.80, 1), 0.98, 0.10),
         paint_green=S.pbr_material("M_Tr_PaintGreen", (0.13, 0.34, 0.24, 1), 0.15, 0.40, noise_scale=70, bump=0.4),
         paint_red=S.pbr_material("M_Tr_PaintRed", (0.55, 0.09, 0.08, 1), 0.12, 0.42, noise_scale=80, bump=0.4),
@@ -621,10 +621,12 @@ MODELS = [
 ]
 
 
-def build_all(render=True):
+def build_all(render=True, only=None):
     S.ensure_dir(OUT)
     total = 0
     for name, fn, fov, az in MODELS:
+        if only and name != only:
+            continue
         S.clean_scene()
         M = materials()
         parts = fn(M)
@@ -657,4 +659,5 @@ def build_all(render=True):
 
 
 if __name__ == "__main__":
-    build_all(render="--no-render" not in sys.argv)
+    _only = sys.argv[sys.argv.index("--only") + 1] if "--only" in sys.argv else None
+    build_all(render="--no-render" not in sys.argv, only=_only)

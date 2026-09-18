@@ -13,7 +13,7 @@ import bpy
 from mathutils import Vector
 
 OUT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..",
-      "UnityProject", "Assets", "Subsistence", "Models", "Characters"))
+      "Assets", "Subsistence", "Models", "Characters"))
 
 # --------------------------------------------------------------------------- #
 #  МАТЕРИАЛЫ ХАЗМАТА (по референсу: жёлтый, атласный блеск, тёмный визор)

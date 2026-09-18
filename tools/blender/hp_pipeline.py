@@ -35,6 +35,9 @@ SAMPLES  = int(opt("--samples", 32))         # сэмплы финального
 KIND     = opt("--kind", "")                 # organic | hard (пусто = авто по префиксу)
 LOD2R    = float(opt("--lod2", 0.25))        # коэффициент decimate LOD2 (0.25; трубы жмём сильнее)
 DETAIL   = "--detail" in argv                # 20б: доп. слой строчек/швов (STUCCI WALL_IN)
+RETEX    = "--retex" in argv                 # 1.2.0: процедурные текстуры вместо плоских цветов
+BAKE_S   = int(opt("--bake-samples", 96))    # 1.2.0: сэмплы запекания (текстуры несут деталь → можно меньше)
+SHEET    = "--no-sheet" not in argv          # лист сравнения (волну гоняем без него — экономит минуты)
 if not KIND:
     KIND = "organic" if MODEL.startswith(("MN_", "CH_")) else "hard"
 
@@ -77,11 +80,17 @@ lp_tris = sum(len(p.vertices) - 2 for p in lp.data.polygons)
 print(f"[hp] LP: {lp.name} · {len(lp.data.vertices)} вершин · {lp_tris} трис")
 
 # ---------- 3. UV ----------
-if not lp.data.uv_layers:
-    bpy.context.view_layer.objects.active = lp
-    lp.select_set(True)
-    bpy.ops.uv.smart_project(angle_limit=1.15, island_margin=0.02)
-    print("[hp] UV не было — smart_project готов")
+# 1.2.0: генераторные FBX содержат «схлопнутый» UVMap (острова каждой детали
+# накладываются — запекание смешивает все материалы в месиво). Развёртку пересоздаём всегда.
+bpy.context.view_layer.objects.active = lp
+lp.select_set(True)
+while lp.data.uv_layers:
+    lp.data.uv_layers.remove(lp.data.uv_layers[0])
+bpy.ops.object.mode_set(mode="EDIT")
+bpy.ops.mesh.select_all(action="SELECT")
+bpy.ops.uv.smart_project(angle_limit=1.15, island_margin=0.02)
+bpy.ops.object.mode_set(mode="OBJECT")
+print("[hp] UV: smart_project (острова без перекрытий)")
 
 # ---------- 4. HP-копия (профиль organic / hard) ----------
 hp = lp.copy()
@@ -135,6 +144,71 @@ hp_tris = sum(len(p.vertices) - 2 for p in me_tmp.polygons)
 hp_eval.to_mesh_clear()
 print(f"[hp] HP: ~{hp_tris} трис ({hp_note})")
 
+# ---------- 4b. RETEX (1.2.0): процедурные текстуры вместо плоских цветов ----------
+RETEX_METALS = []   # (bsdf, metallic) — металл гасим на время diffuse-запекания (у металла нет диффузной компоненты)
+if RETEX:
+    import os as _os, sys as _sys
+    _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+    import proc_tex
+    n_retex = 0
+    seen = set()
+    for slot in hp.material_slots:            # материалы общие с lp (hp = lp.copy())
+        m = slot.material
+        if m is None or m.name in seen:
+            continue
+        seen.add(m.name)
+        base = (0.8, 0.8, 0.8)
+        emis = None
+        if m.use_nodes:
+            for n in m.node_tree.nodes:
+                if n.type == "BSDF_PRINCIPLED":
+                    base = tuple(n.inputs["Base Color"].default_value)[:3]
+                    try:
+                        es = float(n.inputs["Emission Strength"].default_value)
+                        ec = tuple(n.inputs["Emission Color"].default_value)[:3]
+                        if es > 0.01:
+                            emis = (ec, es)
+                    except KeyError:
+                        pass
+                    break
+        path = proc_tex.texture_for(m.name, base, size=SIZE)
+        img = bpy.data.images.load(path)
+        img.name = m.name + "_tex"
+        nt = m.node_tree
+        nt.nodes.clear()
+        out = nt.nodes.new("ShaderNodeOutputMaterial")
+        bsdf = nt.nodes.new("ShaderNodeBsdfPrincipled")
+        nt.links.new(bsdf.outputs["BSDF"], out.inputs["Surface"])
+        tex = nt.nodes.new("ShaderNodeTexImage")
+        tex.image = img
+        tex.projection = "BOX"
+        tex.projection_blend = 0.4
+        coords = nt.nodes.new("ShaderNodeTexCoord")
+        mapping = nt.nodes.new("ShaderNodeMapping")
+        tex_scale = max(1.0, REF / 0.9)        # повтор текстуры каждые ~0.9 м
+        mapping.inputs["Scale"].default_value = (tex_scale, tex_scale, tex_scale)
+        nt.links.new(coords.outputs["Object"], mapping.inputs["Vector"])
+        nt.links.new(mapping.outputs["Vector"], tex.inputs["Vector"])
+        nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+        bump = nt.nodes.new("ShaderNodeBump")
+        bump.inputs["Strength"].default_value = 0.10
+        nt.links.new(tex.outputs["Color"], bump.inputs["Height"])
+        nt.links.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
+        if proc_tex.is_metallic(m.name):
+            bsdf.inputs["Metallic"].default_value = 0.9
+            bsdf.inputs["Roughness"].default_value = 0.4
+            RETEX_METALS.append((bsdf, 0.9))
+        else:
+            bsdf.inputs["Roughness"].default_value = 0.8
+        if emis is not None:
+            bsdf.inputs["Emission Color"].default_value = emis[0] + (1.0,)
+            bsdf.inputs["Emission Strength"].default_value = emis[1]
+        elif proc_tex.is_emissive(m.name, 0):
+            bsdf.inputs["Emission Color"].default_value = base + (1.0,)
+            bsdf.inputs["Emission Strength"].default_value = 6.0
+        n_retex += 1
+    print(f"[hp] RETEX: {n_retex} материалов перетекстурированы (процедурные, тайлящиеся)")
+
 # ---------- 5. материал LP с картами под запекание ----------
 mat = bpy.data.materials.new(MODEL + "_HP_baked")
 mat.use_nodes = True
@@ -168,7 +242,7 @@ lp.data.materials.append(mat)
 sc = bpy.context.scene
 sc.render.engine = "CYCLES"
 sc.cycles.device = "CPU"
-sc.cycles.samples = 96
+sc.cycles.samples = BAKE_S
 
 def select_for_bake(active, selected):
     bpy.ops.object.select_all(action="DESELECT")
@@ -192,6 +266,9 @@ print("[hp] AO запечён")
 
 nt.nodes.active = node_c
 select_for_bake(lp, [hp])
+# металл не имеет диффузной компоненты → albedo запекался бы чёрным; временно гасим metallic
+for _bsdf, _mv in RETEX_METALS:
+    _bsdf.inputs["Metallic"].default_value = 0.0
 sc.render.bake.use_pass_direct = False
 sc.render.bake.use_pass_indirect = False
 sc.render.bake.use_pass_color = True
@@ -199,6 +276,8 @@ bpy.ops.object.bake(type="DIFFUSE", use_selected_to_active=True, use_clear=True,
                     margin=16, cage_extrusion=CAGE)
 sc.render.bake.use_pass_direct = True
 sc.render.bake.use_pass_indirect = True
+for _bsdf, _mv in RETEX_METALS:
+    _bsdf.inputs["Metallic"].default_value = _mv
 print("[hp] albedo (цвет) запечён")
 
 for img, fname in ((img_c, f"{MODEL}_color.png"), (img_n, f"{MODEL}_normal.png"), (img_a, f"{MODEL}_ao.png")):
@@ -255,45 +334,45 @@ export(lod2, f"{MODEL}_lod2.fbx")
 print("[hp] FBX: _hp, _lod1, _lod2")
 
 # ---------- 9. лист сравнения: обе версии С ТЕКСТУРАМИ ----------
-for o in (lp, lod1, lod2, hp):
-    o.hide_render = o.hide_viewport = False
+if SHEET:
+  for o in (lp, lod1, lod2, hp):
+      o.hide_render = o.hide_viewport = False
 # HP оставляем с оригинальными материалами (цвета из исходного FBX)
 # LP уже с albedo×AO + нормалями
 
 # расставить по размеру модели
-bb = lp.matrix_world @ mathutils.Vector(lp.data.vertices[0].co)  # init
-world_coords = [lp.matrix_world @ mathutils.Vector(v.co) for v in lp.data.vertices[:400]]
-xs = [v.x for v in world_coords]; zs = [v.z for v in world_coords]
-size = max(max(xs) - min(xs), max(zs) - min(zs), 0.5)
-cy = (max(zs) + min(zs)) / 2
-off = size * 0.62
-lp.location.x -= off
-hp.location.x += off
-cam_dist = size * 2.6
+  corners = [lp.matrix_world @ mathutils.Vector(c) for c in lp.bound_box]
+  xs = [v.x for v in corners]; zs = [v.z for v in corners]
+  size = max(max(xs) - min(xs), max(zs) - min(zs), 0.5)
+  cy = (max(zs) + min(zs)) / 2
+  off = size * 0.62
+  lp.location.x -= off
+  hp.location.x += off
+  cam_dist = size * 2.6
 
-cam_data = bpy.data.cameras.new("Cam"); cam_data.lens = 50
-cam = bpy.data.objects.new("Cam", cam_data)
-bpy.context.collection.objects.link(cam)
-cam.location = (0, -cam_dist, cy + size * 0.12)
-target = mathutils.Vector((0, 0, cy))
-cam.rotation_euler = (target - cam.location).to_track_quat("-Z", "Y").to_euler()
+  cam_data = bpy.data.cameras.new("Cam"); cam_data.lens = 50
+  cam = bpy.data.objects.new("Cam", cam_data)
+  bpy.context.collection.objects.link(cam)
+  cam.location = (0, -cam_dist, cy + size * 0.12)
+  target = mathutils.Vector((0, 0, cy))
+  cam.rotation_euler = (target - cam.location).to_track_quat("-Z", "Y").to_euler()
 
-sun_data = bpy.data.lights.new("Sun", "SUN"); sun_data.energy = 3.2
-sun = bpy.data.objects.new("Sun", sun_data)
-bpy.context.collection.objects.link(sun)
-sun.rotation_euler = (0.85, 0.15, 0.55)
+  sun_data = bpy.data.lights.new("Sun", "SUN"); sun_data.energy = 4.5
+  sun = bpy.data.objects.new("Sun", sun_data)
+  bpy.context.collection.objects.link(sun)
+  sun.rotation_euler = (0.85, 0.15, 0.55)
 
-world = bpy.data.worlds.new("HpWorld")
-world.use_nodes = True
-world.node_tree.nodes["Background"].inputs[0].default_value = (0.05, 0.05, 0.06, 1)
-world.node_tree.nodes["Background"].inputs[1].default_value = 0.6
-sc.world = world
-sc.camera = cam
-sc.cycles.samples = SAMPLES
-sc.render.resolution_x = 960
-sc.render.resolution_y = 540
-sc.render.filepath = os.path.join(ROOT, "docs", "previews", f"_hp_{MODEL}.png")
-bpy.ops.render.render(write_still=True)
-print(f"[hp] лист сравнения (с текстурами): {sc.render.filepath}")
+  world = bpy.data.worlds.new("HpWorld")
+  world.use_nodes = True
+  world.node_tree.nodes["Background"].inputs[0].default_value = (0.05, 0.05, 0.06, 1)
+  world.node_tree.nodes["Background"].inputs[1].default_value = 0.6
+  sc.world = world
+  sc.camera = cam
+  sc.cycles.samples = SAMPLES
+  sc.render.resolution_x = 960
+  sc.render.resolution_y = 540
+  sc.render.filepath = os.path.join(ROOT, "docs", "previews", f"_hp_{MODEL}.png")
+  bpy.ops.render.render(write_still=True)
+  print(f"[hp] лист сравнения (с текстурами): {sc.render.filepath}")
 
 print(f"[hp] ГОТОВО · {MODEL}: LP {lp_tris} трис + HP {hp_tris} трис + color/normal/AO {SIZE}px + 2 LOD")

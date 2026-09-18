@@ -18,7 +18,7 @@ import subs_common as S
 import subs_shapes as K
 
 OUT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..",
-      "UnityProject", "Assets", "Subsistence", "Models", "Weapons"))
+      "Assets", "Subsistence", "Models", "Weapons"))
 R = math.radians
 
 

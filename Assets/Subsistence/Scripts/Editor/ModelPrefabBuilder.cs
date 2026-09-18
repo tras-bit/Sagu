@@ -250,11 +250,11 @@ namespace Subsistence.EditorTools
                     var c = cp[i];
                     // ПАНЧ: контраст вокруг средней яркости + насыщенность — без этого
                     // запечённые карты выглядят белёсыми/выцветшими (жалоба «текстуры говно»)
-                    float r = Mathf.Clamp01((c.r * k - 0.5f) * 1.13f + 0.5f);
-                    float g = Mathf.Clamp01((c.g * k - 0.5f) * 1.13f + 0.5f);
-                    float b = Mathf.Clamp01((c.b * k - 0.5f) * 1.13f + 0.5f);
+                    float r = Mathf.Clamp01((c.r * k - 0.5f) * 1.06f + 0.5f);
+                    float g = Mathf.Clamp01((c.g * k - 0.5f) * 1.06f + 0.5f);
+                    float b = Mathf.Clamp01((c.b * k - 0.5f) * 1.06f + 0.5f);
                     float lum = 0.299f * r + 0.587f * g + 0.114f * b;
-                    rp[i] = new Color(lum + (r - lum) * 1.22f, lum + (g - lum) * 1.22f, lum + (b - lum) * 1.22f, c.a);
+                    rp[i] = new Color(lum + (r - lum) * 1.10f, lum + (g - lum) * 1.10f, lum + (b - lum) * 1.10f, c.a);
                 }
             result.SetPixels(rp);
             result.Apply(false, false);

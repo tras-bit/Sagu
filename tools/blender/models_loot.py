@@ -16,7 +16,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import subs_common as S
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.abspath(os.path.join(HERE, "..", "..", "UnityProject", "Assets", "Subsistence", "Models", "Props"))
+OUT = os.path.abspath(os.path.join(HERE, "..", "..", "Assets", "Subsistence", "Models", "Props"))
 PREVIEW = os.path.abspath(os.path.join(HERE, "..", "..", "docs", "previews"))
 
 

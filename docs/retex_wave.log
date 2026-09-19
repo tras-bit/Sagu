@@ -659,3 +659,20 @@ RETEX WAVE resume Sat Sep 19 13:18:49 UTC 2026
 [hp] FBX: _hp, _lod1, _lod2
 [hp] ГОТОВО · DD_workbench1: LP 1572 трис + HP 7156 трис + color/normal/AO 2048px + 2 LOD
 ===== [B] RETEX DONE DD_workbench1 =====
+===== COMMIT+PUSH (после DD_workbench1) =====
+===== [B] RETEX DD_workbench1_L3 =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/DD_sleepingbag.fbx
+[hp] LP: DD_sleepingbag · 372 вершин · 688 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 4.20 мм + царапины)
+[hp] HP: ~4296 трис (фаски 4.20 мм + царапины)
+[hp] RETEX: 7 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: DD_sleepingbag_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/DD_sleepingbag
+[hp] DD_sleepingbag_LOD1: 378 трис
+[hp] DD_sleepingbag_LOD2: 172 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · DD_sleepingbag: LP 688 трис + HP 4296 трис + color/normal/AO 2048px + 2 LOD
+===== [A] RETEX DONE DD_sleepingbag =====

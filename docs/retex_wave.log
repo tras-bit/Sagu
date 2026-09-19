@@ -285,3 +285,20 @@ RETEX WAVE resume Sat Sep 19 13:18:49 UTC 2026
 ===== [B] RETEX DONE CH_hazmat_suit =====
 ===== COMMIT+PUSH (после BD_stairs) =====
 ===== [A] RETEX BD_window =====
+===== COMMIT+PUSH (после CH_hazmat_suit) =====
+===== [B] RETEX DD_autoturret =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/BD_window.fbx
+[hp] LP: BD_window · 32 вершин · 48 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 6.60 мм + царапины)
+[hp] HP: ~752 трис (фаски 6.60 мм + царапины)
+[hp] RETEX: 1 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: BD_window_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/BD_window
+[hp] BD_window_LOD1: 26 трис
+[hp] BD_window_LOD2: 12 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · BD_window: LP 48 трис + HP 752 трис + color/normal/AO 2048px + 2 LOD
+===== [A] RETEX DONE BD_window =====

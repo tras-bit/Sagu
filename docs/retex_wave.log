@@ -676,3 +676,20 @@ RETEX WAVE resume Sat Sep 19 13:18:49 UTC 2026
 [hp] FBX: _hp, _lod1, _lod2
 [hp] ГОТОВО · DD_sleepingbag: LP 688 трис + HP 4296 трис + color/normal/AO 2048px + 2 LOD
 ===== [A] RETEX DONE DD_sleepingbag =====
+===== COMMIT+PUSH (после DD_sleepingbag) =====
+===== [A] RETEX DD_trap_spikes =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/DD_workbench1_L3.fbx
+[hp] LP: DD_workbench1_L3 · 840 вершин · 1572 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 2.77 мм + царапины)
+[hp] HP: ~7156 трис (фаски 2.77 мм + царапины)
+[hp] RETEX: 6 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: DD_workbench1_L3_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/DD_workbench1_L3
+[hp] DD_workbench1_L3_LOD1: 864 трис
+[hp] DD_workbench1_L3_LOD2: 392 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · DD_workbench1_L3: LP 1572 трис + HP 7156 трис + color/normal/AO 2048px + 2 LOD
+===== [B] RETEX DONE DD_workbench1_L3 =====

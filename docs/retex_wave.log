@@ -82,3 +82,119 @@ RETEX WAVE resume Sat Sep 19 08:12:36 UTC 2026
 [hp] FBX: _hp, _lod1, _lod2
 [hp] ГОТОВО · BD_floor_tri: LP 164 трис + HP 992 трис + color/normal/AO 2048px + 2 LOD
 ===== RETEX DONE BD_floor_tri =====
+===== COMMIT+PUSH (партия 1, 5 готово) =====
+===== RETEX BD_foundation =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/BD_foundation.fbx
+[hp] LP: BD_foundation.001 · 120 вершин · 220 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 6.60 мм + царапины)
+[hp] HP: ~1068 трис (фаски 6.60 мм + царапины)
+[hp] RETEX: 2 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: BD_foundation_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/BD_foundation
+[hp] BD_foundation_LOD1: 120 трис
+[hp] BD_foundation_LOD2: 54 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · BD_foundation: LP 220 трис + HP 1068 трис + color/normal/AO 2048px + 2 LOD
+===== RETEX DONE BD_foundation =====
+===== RETEX BD_foundation_tri =====
+===== RETEX: ожидаает 152 моделей =====
+===== [A] RETEX BD_foundation_tri =====
+===== [B] RETEX BD_high_wall =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/BD_foundation_tri.fbx
+[hp] LP: BD_foundation_tri.001 · 66 вершин · 120 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 6.60 мм + царапины)
+[hp] HP: ~804 трис (фаски 6.60 мм + царапины)
+[hp] RETEX: 1 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: BD_foundation_tri_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/BD_foundation_tri
+[hp] BD_foundation_tri_LOD1: 66 трис
+[hp] BD_foundation_tri_LOD2: 30 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · BD_foundation_tri: LP 120 трис + HP 804 трис + color/normal/AO 2048px + 2 LOD
+===== [A] RETEX DONE BD_foundation_tri =====
+===== [A] RETEX BD_pillar =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/BD_high_wall.fbx
+[hp] LP: BD_high_wall.001 · 216 вершин · 396 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 13.16 мм + царапины)
+[hp] HP: ~1692 трис (фаски 13.16 мм + царапины)
+[hp] RETEX: 2 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: BD_high_wall_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/BD_high_wall
+[hp] BD_high_wall_LOD1: 216 трис
+[hp] BD_high_wall_LOD2: 98 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · BD_high_wall: LP 396 трис + HP 1692 трис + color/normal/AO 2048px + 2 LOD
+===== [B] RETEX DONE BD_high_wall =====
+===== [B] RETEX BD_railing =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/BD_pillar.fbx
+[hp] LP: BD_pillar.001 · 168 вершин · 308 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 6.60 мм + царапины)
+[hp] HP: ~1748 трис (фаски 6.60 мм + царапины)
+[hp] RETEX: 2 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: BD_pillar_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/BD_pillar
+[hp] BD_pillar_LOD1: 168 трис
+[hp] BD_pillar_LOD2: 76 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · BD_pillar: LP 308 трис + HP 1748 трис + color/normal/AO 2048px + 2 LOD
+===== [A] RETEX DONE BD_pillar =====
+===== [A] RETEX BD_ramp =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/BD_railing.fbx
+[hp] LP: BD_railing · 360 вершин · 672 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 6.60 мм + царапины)
+[hp] HP: ~3120 трис (фаски 6.60 мм + царапины)
+[hp] RETEX: 2 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: BD_railing_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/BD_railing
+[hp] BD_railing_LOD1: 368 трис
+[hp] BD_railing_LOD2: 168 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · BD_railing: LP 672 трис + HP 3120 трис + color/normal/AO 2048px + 2 LOD
+===== [B] RETEX DONE BD_railing =====
+===== [B] RETEX BD_ramp_corner =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/BD_ramp.fbx
+[hp] LP: BD_ramp · 792 вершин · 1464 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 7.59 мм + царапины)
+[hp] HP: ~6408 трис (фаски 7.59 мм + царапины)
+[hp] RETEX: 2 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: BD_ramp_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/BD_ramp
+[hp] BD_ramp_LOD1: 804 трис
+[hp] BD_ramp_LOD2: 366 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · BD_ramp: LP 1464 трис + HP 6408 трис + color/normal/AO 2048px + 2 LOD
+===== [A] RETEX DONE BD_ramp =====
+===== [A] RETEX BD_roof =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/BD_roof.fbx
+[hp] LP: BD_roof · 1176 вершин · 2228 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 7.35 мм + царапины)
+[hp] HP: ~10436 трис (фаски 7.35 мм + царапины)
+[hp] RETEX: 2 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: BD_roof_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/BD_roof
+[hp] BD_roof_LOD1: 1224 трис
+[hp] BD_roof_LOD2: 556 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · BD_roof: LP 2228 трис + HP 10436 трис + color/normal/AO 2048px + 2 LOD
+===== [A] RETEX DONE BD_roof =====

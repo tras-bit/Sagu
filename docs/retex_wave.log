@@ -336,3 +336,20 @@ RETEX WAVE resume Sat Sep 19 13:18:49 UTC 2026
 [hp] FBX: _hp, _lod1, _lod2
 [hp] ГОТОВО · CH_trader_npc: LP 37276 трис + HP 603136 трис + color/normal/AO 2048px + 2 LOD
 ===== [A] RETEX DONE CH_trader_npc =====
+===== COMMIT+PUSH (после CH_trader_npc) =====
+===== [A] RETEX DD_barricade_concrete =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/DD_barricade_metal.fbx
+[hp] LP: DD_barricade_metal · 610 вершин · 1092 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 3.83 мм + царапины)
+[hp] HP: ~6340 трис (фаски 3.83 мм + царапины)
+[hp] RETEX: 5 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: DD_barricade_metal_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/DD_barricade_metal
+[hp] DD_barricade_metal_LOD1: 600 трис
+[hp] DD_barricade_metal_LOD2: 272 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · DD_barricade_metal: LP 1092 трис + HP 6340 трис + color/normal/AO 2048px + 2 LOD
+===== [B] RETEX DONE DD_barricade_metal =====

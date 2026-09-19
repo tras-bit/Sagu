@@ -198,3 +198,22 @@ RETEX WAVE resume Sat Sep 19 08:12:36 UTC 2026
 [hp] FBX: _hp, _lod1, _lod2
 [hp] ГОТОВО · BD_roof: LP 2228 трис + HP 10436 трис + color/normal/AO 2048px + 2 LOD
 ===== [A] RETEX DONE BD_roof =====
+RETEX WAVE resume Sat Sep 19 13:18:49 UTC 2026
+===== RETEX: ожидаает 146 моделей =====
+===== [A] RETEX BD_ramp_corner =====
+===== [B] RETEX BD_shutters =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/BD_shutters.fbx
+[hp] LP: BD_shutters · 456 вершин · 848 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 6.60 мм + царапины)
+[hp] HP: ~3776 трис (фаски 6.60 мм + царапины)
+[hp] RETEX: 3 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: BD_shutters_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/BD_shutters
+[hp] BD_shutters_LOD1: 466 трис
+[hp] BD_shutters_LOD2: 212 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · BD_shutters: LP 848 трис + HP 3776 трис + color/normal/AO 2048px + 2 LOD
+===== [B] RETEX DONE BD_shutters =====

@@ -282,3 +282,6 @@ RETEX WAVE resume Sat Sep 19 13:18:49 UTC 2026
 [hp] CH_hazmat_suit_LOD2: 7724 трис
 [hp] FBX: _hp, _lod1, _lod2
 [hp] ГОТОВО · CH_hazmat_suit: LP 30896 трис + HP 505728 трис + color/normal/AO 2048px + 2 LOD
+===== [B] RETEX DONE CH_hazmat_suit =====
+===== COMMIT+PUSH (после BD_stairs) =====
+===== [A] RETEX BD_window =====

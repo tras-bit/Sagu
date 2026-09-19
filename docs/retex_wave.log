@@ -574,3 +574,20 @@ RETEX WAVE resume Sat Sep 19 13:18:49 UTC 2026
 [hp] FBX: _hp, _lod1, _lod2
 [hp] ГОТОВО · DD_repair_bench: LP 752 трис + HP 5704 трис + color/normal/AO 2048px + 2 LOD
 ===== [A] RETEX DONE DD_repair_bench =====
+===== COMMIT+PUSH (после DD_repair_bench) =====
+===== [A] RETEX DD_samsite =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/DD_sign.fbx
+[hp] LP: DD_sign · 216 вершин · 380 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 2.00 мм + царапины)
+[hp] HP: ~2684 трис (фаски 2.00 мм + царапины)
+[hp] RETEX: 5 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: DD_sign_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/DD_sign
+[hp] DD_sign_LOD1: 208 трис
+[hp] DD_sign_LOD2: 94 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · DD_sign: LP 380 трис + HP 2684 трис + color/normal/AO 2048px + 2 LOD
+===== [B] RETEX DONE DD_sign =====

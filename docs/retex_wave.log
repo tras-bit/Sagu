@@ -387,3 +387,20 @@ RETEX WAVE resume Sat Sep 19 13:18:49 UTC 2026
 [hp] FBX: _hp, _lod1, _lod2
 [hp] ГОТОВО · DD_cupboard: LP 1244 трис + HP 11164 трис + color/normal/AO 2048px + 2 LOD
 ===== [B] RETEX DONE DD_cupboard =====
+===== COMMIT+PUSH (после DD_cupboard) =====
+===== [B] RETEX DD_door_metal =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/DD_bed.fbx
+[hp] LP: DD_bed · 560 вершин · 996 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 4.47 мм + царапины)
+[hp] HP: ~7380 трис (фаски 4.47 мм + царапины)
+[hp] RETEX: 6 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: DD_bed_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/DD_bed
+[hp] DD_bed_LOD1: 546 трис
+[hp] DD_bed_LOD2: 248 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · DD_bed: LP 996 трис + HP 7380 трис + color/normal/AO 2048px + 2 LOD
+===== [A] RETEX DONE DD_bed =====

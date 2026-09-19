@@ -421,3 +421,20 @@ RETEX WAVE resume Sat Sep 19 13:18:49 UTC 2026
 [hp] FBX: _hp, _lod1, _lod2
 [hp] ГОТОВО · DD_door_metal: LP 1252 трис + HP 5660 трис + color/normal/AO 2048px + 2 LOD
 ===== [B] RETEX DONE DD_door_metal =====
+===== COMMIT+PUSH (после DD_door_metal) =====
+===== [B] RETEX DD_furnace =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/DD_door_armored.fbx
+[hp] LP: DD_door_armored · 580 вершин · 1096 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 4.51 мм + царапины)
+[hp] HP: ~4960 трис (фаски 4.51 мм + царапины)
+[hp] RETEX: 4 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: DD_door_armored_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/DD_door_armored
+[hp] DD_door_armored_LOD1: 602 трис
+[hp] DD_door_armored_LOD2: 274 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · DD_door_armored: LP 1096 трис + HP 4960 трис + color/normal/AO 2048px + 2 LOD
+===== [A] RETEX DONE DD_door_armored =====

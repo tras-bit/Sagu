@@ -557,3 +557,20 @@ RETEX WAVE resume Sat Sep 19 13:18:49 UTC 2026
 [hp] FBX: _hp, _lod1, _lod2
 [hp] ГОТОВО · DD_lock_key: LP 320 трис + HP 1872 трис + color/normal/AO 2048px + 2 LOD
 ===== [A] RETEX DONE DD_lock_key =====
+===== COMMIT+PUSH (после DD_lock_key) =====
+===== [A] RETEX DD_repair_bench =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/DD_repair_bench.fbx
+[hp] LP: DD_repair_bench · 428 вершин · 752 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 3.61 мм + царапины)
+[hp] HP: ~5704 трис (фаски 3.61 мм + царапины)
+[hp] RETEX: 6 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: DD_repair_bench_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/DD_repair_bench
+[hp] DD_repair_bench_LOD1: 412 трис
+[hp] DD_repair_bench_LOD2: 188 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · DD_repair_bench: LP 752 трис + HP 5704 трис + color/normal/AO 2048px + 2 LOD
+===== [A] RETEX DONE DD_repair_bench =====

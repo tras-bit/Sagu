@@ -55,9 +55,7 @@ worker() {  # $1=список имён через пробел, $2=ядро, $3=
     [ -f "$HP/$n/.retex2k" ] && continue
     if bake_one "$n" "$core" "$tag"; then
       cnt=$((cnt + 1))
-      if [ $((cnt % 2)) -eq 0 ]; then
-        commit_progress "$n"
-      fi
+      commit_progress "$n"
     fi
   done
 }

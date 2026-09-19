@@ -436,7 +436,7 @@ def build_elevator_car(M):
     st, std, gr, rub = M["steel"], M["steel_dark"], M["grip"], M["rubber"]
     yel, lamp, led_g, led_r, tape, ch = M["paint_yellow"], M["lamp"], M["led_green"], M["led_red"], M["tape"], M["chrome"]
 
-    W, D, H = 2.10, 2.10, 2.55
+    W, D, H = 2.10, 2.10, 3.00   # 1.2.0: потолок выше (2.55 → 3.0)
     p = []
     # ---- пол: рифлёная плита + решётка сверху + жёлтые пороги ----
     p.append(S.box("EL_floor", (W, D, 0.08), loc=(0, 0, 0.04), bevel=0.008, mat=std))
@@ -465,6 +465,13 @@ def build_elevator_car(M):
                         rot=(math.radians(90), 0, math.radians(90)), frame=st, body=std, bars=12))
         p.append(S.box(f"EL_sidebrace{sx}", (0.035, D - 0.30, 0.05), loc=(sx * (W / 2 - 0.055), 0, 1.15), mat=std))
         p.append(S.box(f"EL_sidebrace2{sx}", (0.035, D - 0.30, 0.05), loc=(sx * (W / 2 - 0.055), 0, 0.45), mat=std))
+        # 1.2.0: диагональные раскосы — жёсткость каркаса (стройка)
+        p.append(S.tube(f"EL_diag{sx}", [(sx * (W / 2 - 0.055), -D / 2 + 0.35, 0.55),
+                                          (sx * (W / 2 - 0.055), D / 2 - 0.35, H - 0.55)],
+                        0.014, mat=std, resolution=6))
+    # 1.2.0: диагональ на задней стенке
+    p.append(S.tube("EL_diag_b", [(-W / 2 + 0.35, -D / 2 + 0.055, 0.55),
+                                   (W / 2 - 0.35, -D / 2 + 0.055, H - 0.55)], 0.014, mat=std, resolution=6))
     # ---- аккордеонные ворота ----
     for i in range(9):
         x = -0.72 + i * 0.18
@@ -494,6 +501,16 @@ def build_elevator_car(M):
     p.append(S.box("EL_lamp_lens", (0.68, 0.30, 0.03), loc=(0, 0.30, H - 0.245), mat=lamp))
     for i in range(7):
         p.append(S.box(f"EL_lamp_bar{i}", (0.68, 0.018, 0.018), loc=(0, 0.30 - 0.12 + i * 0.04, H - 0.26), mat=std))
+    # 1.2.0: потолочный светильник у двери (вторая зона света) + грузовой люк на крыше
+    p.append(S.box("EL_lamp2", (0.50, 0.26, 0.06), loc=(0.30, -D / 2 + 0.45, H - 0.19), bevel=0.006, mat=std))
+    p.append(S.box("EL_lamp2_lens", (0.44, 0.20, 0.025), loc=(0.30, -D / 2 + 0.45, H - 0.23), mat=lamp))
+    for i in range(5):
+        p.append(S.box(f"EL_lamp2_bar{i}", (0.44, 0.016, 0.016), loc=(0.30, -D / 2 + 0.45 - 0.08 + i * 0.04, H - 0.245), mat=std))
+    p.append(S.box("EL_hatch_frame", (0.60, 0.60, 0.05), loc=(0.45, -0.35, H - 0.045), bevel=0.006, mat=st))
+    p.append(S.box("EL_hatch_lid", (0.52, 0.52, 0.03), loc=(0.45, -0.35, H - 0.055), bevel=0.004, mat=std))
+    p.append(S.box("EL_hatch_handle", (0.10, 0.02, 0.02), loc=(0.45, -0.35, H - 0.035), mat=ch))
+    p.extend(_bolt("EL_hatch_bolt1", 0.008, 0.014, (0.45 - 0.26, -0.35 + 0.26, H - 0.045), (math.radians(90), 0, 0), std))
+    p.extend(_bolt("EL_hatch_bolt2", 0.008, 0.014, (0.45 + 0.26, -0.35 - 0.26, H - 0.045), (math.radians(90), 0, 0), std))
     # ---- поручень, кабель-канал, разметка ----
     # поручни в два уровня + 5 стоек (раньше висели в воздухе)
     for lvl, zz in ((0, 1.00), (1, 0.52)):

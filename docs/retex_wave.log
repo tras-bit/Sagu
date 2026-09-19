@@ -693,3 +693,20 @@ RETEX WAVE resume Sat Sep 19 13:18:49 UTC 2026
 [hp] FBX: _hp, _lod1, _lod2
 [hp] ГОТОВО · DD_workbench1_L3: LP 1572 трис + HP 7156 трис + color/normal/AO 2048px + 2 LOD
 ===== [B] RETEX DONE DD_workbench1_L3 =====
+===== COMMIT+PUSH (после DD_workbench1_L3) =====
+===== [B] RETEX DD_workbench2 =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/DD_trap_spikes.fbx
+[hp] LP: DD_trap_spikes · 564 вершин · 1000 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 2.46 мм + царапины)
+[hp] HP: ~8336 трис (фаски 2.46 мм + царапины)
+[hp] RETEX: 4 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: DD_trap_spikes_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/DD_trap_spikes
+[hp] DD_trap_spikes_LOD1: 550 трис
+[hp] DD_trap_spikes_LOD2: 250 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · DD_trap_spikes: LP 1000 трис + HP 8336 трис + color/normal/AO 2048px + 2 LOD
+===== [A] RETEX DONE DD_trap_spikes =====

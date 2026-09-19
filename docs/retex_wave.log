@@ -251,3 +251,34 @@ RETEX WAVE resume Sat Sep 19 13:18:49 UTC 2026
 [hp] FBX: _hp, _lod1, _lod2
 [hp] ГОТОВО · BD_wall: LP 72 трис + HP 1128 трис + color/normal/AO 2048px + 2 LOD
 ===== [B] RETEX DONE BD_wall =====
+===== COMMIT+PUSH (после BD_wall) =====
+===== [B] RETEX CH_hazmat_suit =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/BD_stairs.fbx
+[hp] LP: BD_stairs · 88 вершин · 132 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 7.25 мм + царапины)
+[hp] HP: ~2068 трис (фаски 7.25 мм + царапины)
+[hp] RETEX: 1 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: BD_stairs_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/BD_stairs
+[hp] BD_stairs_LOD1: 72 трис
+[hp] BD_stairs_LOD2: 32 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · BD_stairs: LP 132 трис + HP 2068 трис + color/normal/AO 2048px + 2 LOD
+===== [A] RETEX DONE BD_stairs =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Characters/CH_hazmat_suit.fbx
+[hp] LP: CH_hazmat_suit · 15612 вершин · 30896 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: organic (субдивизия ×2 + органика)
+[hp] HP: ~505728 трис (субдивизия ×2 + органика)
+[hp] RETEX: 7 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: CH_hazmat_suit_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/CH_hazmat_suit
+[hp] CH_hazmat_suit_LOD1: 16992 трис
+[hp] CH_hazmat_suit_LOD2: 7724 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · CH_hazmat_suit: LP 30896 трис + HP 505728 трис + color/normal/AO 2048px + 2 LOD

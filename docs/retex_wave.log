@@ -540,3 +540,20 @@ RETEX WAVE resume Sat Sep 19 13:18:49 UTC 2026
 [hp] FBX: _hp, _lod1, _lod2
 [hp] ГОТОВО · DD_research_table: LP 1304 трис + HP 7456 трис + color/normal/AO 2048px + 2 LOD
 ===== [B] RETEX DONE DD_research_table =====
+===== COMMIT+PUSH (после DD_research_table) =====
+===== [B] RETEX DD_sign =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/DD_lock_key.fbx
+[hp] LP: DD_lock_key · 176 вершин · 320 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 0.66 мм + царапины)
+[hp] HP: ~1872 трис (фаски 0.66 мм + царапины)
+[hp] RETEX: 3 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: DD_lock_key_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/DD_lock_key
+[hp] DD_lock_key_LOD1: 176 трис
+[hp] DD_lock_key_LOD2: 80 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · DD_lock_key: LP 320 трис + HP 1872 трис + color/normal/AO 2048px + 2 LOD
+===== [A] RETEX DONE DD_lock_key =====

@@ -625,3 +625,20 @@ RETEX WAVE resume Sat Sep 19 13:18:49 UTC 2026
 [hp] FBX: _hp, _lod1, _lod2
 [hp] ГОТОВО · DD_samsite: LP 1040 трис + HP 5664 трис + color/normal/AO 2048px + 2 LOD
 ===== [A] RETEX DONE DD_samsite =====
+===== COMMIT+PUSH (после DD_samsite) =====
+===== [A] RETEX DD_sleepingbag =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/DD_wind_generator.fbx
+[hp] LP: DD_wind_generator · 550 вершин · 936 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 7.79 мм + царапины)
+[hp] HP: ~4944 трис (фаски 7.79 мм + царапины)
+[hp] RETEX: 7 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: DD_wind_generator_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/DD_wind_generator
+[hp] DD_wind_generator_LOD1: 514 трис
+[hp] DD_wind_generator_LOD2: 234 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · DD_wind_generator: LP 936 трис + HP 4944 трис + color/normal/AO 2048px + 2 LOD
+===== [B] RETEX DONE DD_wind_generator =====

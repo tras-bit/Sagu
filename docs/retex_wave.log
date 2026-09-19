@@ -353,3 +353,20 @@ RETEX WAVE resume Sat Sep 19 13:18:49 UTC 2026
 [hp] FBX: _hp, _lod1, _lod2
 [hp] ГОТОВО · DD_barricade_metal: LP 1092 трис + HP 6340 трис + color/normal/AO 2048px + 2 LOD
 ===== [B] RETEX DONE DD_barricade_metal =====
+===== COMMIT+PUSH (после DD_barricade_metal) =====
+===== [B] RETEX DD_cupboard =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/DD_barricade_concrete.fbx
+[hp] LP: DD_barricade_concrete · 424 вершин · 792 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 3.56 мм + царапины)
+[hp] HP: ~3640 трис (фаски 3.56 мм + царапины)
+[hp] RETEX: 2 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: DD_barricade_concrete_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/DD_barricade_concrete
+[hp] DD_barricade_concrete_LOD1: 434 трис
+[hp] DD_barricade_concrete_LOD2: 198 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · DD_barricade_concrete: LP 792 трис + HP 3640 трис + color/normal/AO 2048px + 2 LOD
+===== [A] RETEX DONE DD_barricade_concrete =====

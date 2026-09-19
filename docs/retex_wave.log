@@ -1,2 +1,84 @@
 RETEX WAVE resume Sat Sep 19 05:23:23 UTC 2026
 ===== RETEX BD_door_armored =====
+RETEX WAVE resume Sat Sep 19 08:12:36 UTC 2026
+===== RETEX BD_door_armored =====
+===== RETEX BD_door_armored =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/BD_door_armored.fbx
+[hp] LP: BD_door_armored · 96 вершин · 180 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 4.51 мм + царапины)
+[hp] HP: ~868 трис (фаски 4.51 мм + царапины)
+[hp] RETEX: 2 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: BD_door_armored_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/BD_door_armored
+[hp] BD_door_armored_LOD1: 98 трис
+[hp] BD_door_armored_LOD2: 44 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · BD_door_armored: LP 180 трис + HP 868 трис + color/normal/AO 2048px + 2 LOD
+===== RETEX DONE BD_door_armored =====
+===== RETEX BD_door_metal =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/BD_door_metal.fbx
+[hp] LP: BD_door_metal · 96 вершин · 180 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 4.51 мм + царапины)
+[hp] HP: ~868 трис (фаски 4.51 мм + царапины)
+[hp] RETEX: 1 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: BD_door_metal_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/BD_door_metal
+[hp] BD_door_metal_LOD1: 98 трис
+[hp] BD_door_metal_LOD2: 44 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · BD_door_metal: LP 180 трис + HP 868 трис + color/normal/AO 2048px + 2 LOD
+===== RETEX DONE BD_door_metal =====
+===== RETEX BD_doorway =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/BD_doorway.fbx
+[hp] LP: BD_doorway · 24 вершин · 36 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 6.60 мм + царапины)
+[hp] HP: ~564 трис (фаски 6.60 мм + царапины)
+[hp] RETEX: 1 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: BD_doorway_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/BD_doorway
+[hp] BD_doorway_LOD1: 18 трис
+[hp] BD_doorway_LOD2: 8 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · BD_doorway: LP 36 трис + HP 564 трис + color/normal/AO 2048px + 2 LOD
+===== RETEX DONE BD_doorway =====
+===== RETEX BD_floor =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/BD_floor.fbx
+[hp] LP: BD_floor.001 · 40 вершин · 60 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 6.60 мм + царапины)
+[hp] HP: ~940 трис (фаски 6.60 мм + царапины)
+[hp] RETEX: 1 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: BD_floor_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/BD_floor
+[hp] BD_floor_LOD1: 32 трис
+[hp] BD_floor_LOD2: 14 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · BD_floor: LP 60 трис + HP 940 трис + color/normal/AO 2048px + 2 LOD
+===== RETEX DONE BD_floor =====
+===== RETEX BD_floor_tri =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/BD_floor_tri.fbx
+[hp] LP: BD_floor_tri.001 · 90 вершин · 164 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 6.60 мм + царапины)
+[hp] HP: ~992 трис (фаски 6.60 мм + царапины)
+[hp] RETEX: 2 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: BD_floor_tri_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/BD_floor_tri
+[hp] BD_floor_tri_LOD1: 90 трис
+[hp] BD_floor_tri_LOD2: 40 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · BD_floor_tri: LP 164 трис + HP 992 трис + color/normal/AO 2048px + 2 LOD
+===== RETEX DONE BD_floor_tri =====

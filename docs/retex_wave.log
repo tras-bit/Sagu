@@ -489,3 +489,20 @@ RETEX WAVE resume Sat Sep 19 13:18:49 UTC 2026
 [hp] FBX: _hp, _lod1, _lod2
 [hp] ГОТОВО · DD_lock_code: LP 360 трис + HP 3280 трис + color/normal/AO 2048px + 2 LOD
 ===== [B] RETEX DONE DD_lock_code =====
+===== COMMIT+PUSH (после DD_lock_code) =====
+===== [B] RETEX DD_purifier =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Props/DD_purifier.fbx
+[hp] LP: DD_purifier · 734 вершин · 1304 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: hard (фаски 2.10 мм + царапины)
+[hp] HP: ~6476 трис (фаски 2.10 мм + царапины)
+[hp] RETEX: 9 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: DD_purifier_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/DD_purifier
+[hp] DD_purifier_LOD1: 716 трис
+[hp] DD_purifier_LOD2: 326 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · DD_purifier: LP 1304 трис + HP 6476 трис + color/normal/AO 2048px + 2 LOD
+===== [B] RETEX DONE DD_purifier =====

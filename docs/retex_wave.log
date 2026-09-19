@@ -319,3 +319,20 @@ RETEX WAVE resume Sat Sep 19 13:18:49 UTC 2026
 [hp] FBX: _hp, _lod1, _lod2
 [hp] ГОТОВО · DD_autoturret: LP 1280 трис + HP 5672 трис + color/normal/AO 2048px + 2 LOD
 ===== [B] RETEX DONE DD_autoturret =====
+===== COMMIT+PUSH (после DD_autoturret) =====
+===== [B] RETEX DD_barricade_metal =====
+[hp] исходник: /home/user/Sagu/Assets/Subsistence/Models/Characters/CH_trader_npc.fbx
+[hp] LP: CH_trader_npc · 18980 вершин · 37276 трис
+[hp] UV: smart_project (острова без перекрытий)
+[hp] профиль: organic (субдивизия ×2 + органика)
+[hp] HP: ~603136 трис (субдивизия ×2 + органика)
+[hp] RETEX: 17 материалов перетекстурированы (процедурные, тайлящиеся)
+[hp] нормали запечены
+[hp] AO запечён
+[hp] albedo (цвет) запечён
+[hp] карты: CH_trader_npc_color/_normal/_ao.png (2048px) → /home/user/Sagu/Assets/Subsistence/ModelsHP/CH_trader_npc
+[hp] CH_trader_npc_LOD1: 20500 трис
+[hp] CH_trader_npc_LOD2: 9318 трис
+[hp] FBX: _hp, _lod1, _lod2
+[hp] ГОТОВО · CH_trader_npc: LP 37276 трис + HP 603136 трис + color/normal/AO 2048px + 2 LOD
+===== [A] RETEX DONE CH_trader_npc =====
